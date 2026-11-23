@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Socialist Table — Ruang Diskusi & Advokasi</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Playfair Display & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,600&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons UMD -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-editorial {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f3f4f6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-700 selection:bg-red-800 selection:text-white">
+  <div id="app" class="min-h-screen flex flex-col"></div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
+
+    // =====================================================================
+    // KONFIGURASI SUPABASE  --> ISI DUA NILAI DI BAWAH INI
+    // Supabase Dashboard > Project Settings > API
+    //   - Project URL      -> SUPABASE_URL
+    //   - anon public key  -> SUPABASE_ANON_KEY  (publishable/anon key, BUKAN secret/service_role key)
+    // =====================================================================
+    const SUPABASE_URL = "https://zgjjcjxckimrppyvrqge.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_78rGIR5F4kb2WV2sGgIUYg_aUhKdpuf";
+
+    const supabaseConfigured =
+      !SUPABASE_URL.includes("GANTI-DENGAN") && !SUPABASE_ANON_KEY.includes("GANTI-DENGAN");
+    const sb = supabaseConfigured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    // Nama tabel di Supabase (lihat file supabase-setup.sql)
+    const T = {
+      settings: "st_settings",
+      publications: "st_publications",
+      events: "st_events",
+      advocacy: "st_advocacy",
+      users: "st_users",
+      submissions: "st_submissions",
+      admins: "admins"
+    };
+
+    // --- TEMA & PRESET ---
+    const ACCENT_THEMES = {
+      maroon: {
+        name: "Merah Marun (Kritis)",
+        primaryBg: "bg-red-800",
+        primaryHover: "hover:bg-red-900",
+        primaryText: "text-red-800",
+        primaryBorder: "border-red-800",
+        lightBg: "bg-red-50",
+        hex: "#991B1B"
+      },
+      monochrome: {
+        name: "Abu-abu Monokrom",
+        primaryBg: "bg-gray-600",
+        primaryHover: "hover:bg-gray-700",
+        primaryText: "text-gray-600",
+        primaryBorder: "border-gray-600",
+        lightBg: "bg-gray-100",
+        hex: "#4B5563"
+      },
+      ecology: {
+        name: "Hijau Ekologi",
+        primaryBg: "bg-emerald-800",
+        primaryHover: "hover:bg-emerald-900",
+        primaryText: "text-emerald-800",
+        primaryBorder: "border-emerald-800",
+        lightBg: "bg-emerald-50",
+        hex: "#065F46"
+      },
+      law: {
+        name: "Biru Hukum",
+        primaryBg: "bg-gray-500",
+        primaryHover: "hover:bg-gray-600",
+        primaryText: "text-gray-500",
+        primaryBorder: "border-gray-500",
+        lightBg: "bg-gray-100",
+        hex: "#1E293B"
+      },
+      movement: {
+        name: "Kuning Pergerakan",
+        primaryBg: "bg-amber-600",
+        primaryHover: "hover:bg-amber-700",
+        primaryText: "text-amber-700",
+        primaryBorder: "border-amber-600",
+        lightBg: "bg-amber-50",
+        hex: "#D97706"
+      }
+    };
+
+    const COVER_PRESETS = [
+      { id: "sosial", label: "Ilustrasi Sosial & Kota", gradient: "from-red-900 via-gray-600 to-gray-500" },
+      { id: "politik", label: "Ilustrasi Politik & Parlemen", gradient: "from-gray-600 via-red-900 to-gray-600" },
+      { id: "hukum", label: "Ilustrasi Hukum & Keadilan", gradient: "from-gray-600 via-gray-600 to-gray-500" },
+      { id: "lingkungan", label: "Ilustrasi Ekologi & Agraria", gradient: "from-emerald-900 via-gray-600 to-gray-600" }
+    ];
+
+    const LOGO_ICON_OPTIONS = [
+      { id: "initials", label: "Monogram ST", icon: null },
+      { id: "book", label: "Buku / Kajian", icon: "book-open" },
+      { id: "scale", label: "Timbangan / Hukum", icon: "scale" },
+      { id: "globe", label: "Bumi / Ekologi", icon: "globe" },
+      { id: "megaphone", label: "Megafon / Advokasi", icon: "megaphone" },
+      { id: "star", label: "Bintang Pergerakan", icon: "star" }
+    ];
+
+    const DEFAULT_SITE_CONFIG = {
+      orgName: "Socialist Table",
+      orgSubtitle: "Diskusi & Advokasi",
+      logoType: "icon",
+      logoIconId: "initials",
+      logoIconBg: "",
+      logoImageData: "",
+      logoImageUrl: "",
+      logoShape: "rounded",
+      showLogoText: true,
+      heroTagline: "Ruang Kritis untuk Diskusi & Advokasi",
+      heroDescription:
+        "Wadah dialektika terbuka, riset mendalam, dan pendampingan struktural untuk memperjuangkan keadilan sosial, demokrasi substansial, supremasi hukum rakyat, dan kelestarian ekologi.",
+      heroBgClass: "bg-gray-700",
+      aboutIntro:
+        "Socialist Table adalah kolektif diskusi dan ruang advokasi independen yang mempertemukan akademisi kritis, aktivis lapangan, buruh, mahasiswa, dan warga terdampak untuk membedah ketimpangan struktural secara tajam dan solutif.",
+      aboutHistory:
+        "Berawal dari lingkar baca kecil pada tahun 2022, Socialist Table berkembang menjadi simpul kolaborasi lintas disiplin yang memproduksi kertas kebijakan, mendampingi sengketa agraria dan perburuhan, serta menyelenggarakan forum pendidikan publik secara berkala.",
+      aboutVision:
+        "Mewujudkan tatanan masyarakat yang setara, berkeadilan ekologis, dan bebas dari penindasan struktural melalui produksi pengetahuan yang memihak serta gerakan advokasi berbasis data.",
+      aboutMission:
+        "1. Menyelenggarakan forum dialektika kritis yang inklusif.\n2. Menyusun riset partisipatoris dan kertas kebijakan berbasis bukti lapangan.\n3. Mengawal advokasi hukum struktural dan solidaritas warga terdampak.",
+      accentKey: "maroon",
+      layoutMode: "grid",
+      fontSize: "normal",
+      contactEmail: "socialisttable@gmail.com",
+      contactAddress: "Ruang Kolektif Rakyat, Jl. Merdeka Selatan No. 45",
+      contactInstagram: "@socialisttable.id",
+      contactTwitter: "@socialisttable",
+      contactWhatsappChannel: "https://whatsapp.com/channel/0029Vb9JwSt7z4kkS6zVdG2s",
+      megaRootFolderUrl: "https://mega.nz/",
+      megaFolderSosialUrl: "",
+      megaFolderPolitikUrl: "",
+      megaFolderHukumUrl: "",
+      megaFolderLingkunganUrl: "",
+      advocacyHighlightTitle: "Kampanye Nasional: Hentikan Kriminalisasi Pembela Ruang Hidup (Anti-SLAPP)",
+      advocacyHighlightDesc:
+        "Mendesak Mahkamah Agung dan Kejaksaan Agung menerapkan pedoman perlindungan hukum bagi warga, petani, nelayan, dan peneliti yang memperjuangkan kelestarian lingkungan serta hak konstitusional."
+    };
+
+    const DEFAULT_BOARD_MEMBERS = [
+      { id: "bm-1", name: "Rendra Pratama", role: "Koordinator Umum & Advokasi", focus: "Politik & Gerakan Warga" },
+      { id: "bm-2", name: "Nadia Kartika, S.H.", role: "Kepala Divisi Bantuan Hukum", focus: "Hukum Struktural & HAM" },
+      { id: "bm-3", name: "Dimas Saputra, M.Si.", role: "Koordinator Riset & Publikasi", focus: "Ekologi Politik & Sosial" }
+    ];
+
+    const INITIAL_PUBLICATIONS = [
+      {
+        id: "pub-1",
+        type: "opinion",
+        category: "sosial",
+        title: "Membaca Ulang Ketimpangan Ruang Kota dan Gentrifikasi Paksa",
+        author: "Budi Santoso",
+        date: "18 November 2026",
+        views: 248,
+        excerpt: "Pembangunan infrastruktur berwajah modern kerap menyingkirkan kampung kota tanpa pemulihan hak ekonomi warga yang tergusur.",
+        content:
+          'Pembangunan perkotaan di berbagai wilayah urban Indonesia dalam satu dekade terakhir menunjukkan pola yang seragam: ekspansi modal properti yang berjalan beriringan dengan penyempitan ruang hidup kelas pekerja.\n\nKetika kawasan permukiman padat dilabeli sebagai "kumuh" dan "tidak produktif", negara sering kali hadir bukan sebagai pelindung hak bermukim warga, melainkan sebagai fasilitator alih fungsi lahan. Akibatnya, relokasi ke rumah susun di pinggiran kota justru memutus rantai mata pencaharian informal warga, meningkatkan biaya transportasi harian, serta merusak kohesi sosial yang telah terbangun puluhan tahun.\n\nSocialist Table memandang bahwa tata ruang kota harus dirancang melalui musyawarah warga yang mengikat, bukan sekadar konsultasi formalitas di atas kertas.',
+        docUrl: "https://docs.google.com",
+        docName: "Esai_Gentrifikasi_Kota_2026.pdf",
+        coverGradient: "from-red-900 via-gray-600 to-gray-500",
+        customCover: ""
+      },
+      {
+        id: "pub-2",
+        type: "report",
+        category: "sosial",
+        title: "Kajian Dampak Sistem Kerja Kemitraan Semu pada Pekerja Logistik",
+        author: "Tim Riset Sosial ST",
+        date: "05 November 2026",
+        views: 412,
+        excerpt: "Laporan investigasi terhadap skema kemitraan aplikasi yang menghilangkan hak upah minimum, jaminan kecelakaan kerja, dan hak berserikat.",
+        content:
+          'Ringkasan Eksekutif Kajian:\n1. Sebanyak 78% responden kurir dan pengemudi bekerja lebih dari 11 jam per hari untuk mencapai target insentif dasar.\n2. Skema "mitra" membebankan seluruh biaya perawatan kendaraan, bahan bakar, dan risiko kecelakaan kerja kepada pekerja.\n3. Ketiadaan hubungan kerja formal membuat pekerja rentan mengalami pemutusan kemitraan sepihak oleh algoritma tanpa mekanisme pembelaan.\n\nRekomendasi Advokasi:\n- Mendesak Kementerian Ketenagakerjaan menerbitkan regulasi perlindungan pekerja berbasis platform digital.\n- Mendorong pengakuan serikat pekerja berbasis aplikasi dalam perundingan tarif.',
+        docUrl: "https://docs.google.com",
+        docName: "Laporan_Riset_Pekerja_Platform_2026.pdf",
+        coverGradient: "from-red-900 via-gray-600 to-gray-500",
+        customCover: ""
+      },
+      {
+        id: "pub-3",
+        type: "opinion",
+        category: "politik",
+        title: "Kartelisasi Politik dan Menyempitnya Oposisi Substansial",
+        author: "Tari Wulandari",
+        date: "14 November 2026",
+        views: 319,
+        excerpt: "Ketika koalisi besar menyapu bersih ruang parlemen, fungsi pengawasan terhadap kebijakan publik berpindah ke bahu masyarakat sipil.",
+        content:
+          "Demokrasi elektoral yang berbiaya tinggi telah melahirkan kecenderungan elit politik untuk berkumpul dalam satu lingkaran kekuasaan besar demi mengamankan akses sumber daya.\n\nFenomena koalisi gemuk mematikan fungsi check and balances di lembaga legislatif. Undang-undang strategis dapat disahkan dalam hitungan hari tanpa perdebatan substantif yang menyerap aspirasi publik. Dalam situasi semacam ini, penguatan organisasi warga, serikat buruh, dan pers mahasiswa menjadi benteng terakhir untuk menjaga akuntabilitas kekuasaan.",
+        docUrl: "",
+        docName: "",
+        coverGradient: "from-gray-600 via-red-900 to-gray-600",
+        customCover: ""
+      },
+      {
+        id: "pub-4",
+        type: "report",
+        category: "politik",
+        title: "Kertas Kebijakan: Reformasi Pendanaan Partai Politik & Transparansi Anggaran",
+        author: "Divisi Kajian Politik ST",
+        date: "28 Oktober 2026",
+        views: 285,
+        excerpt: "Analisis mengenai akar korupsi politik akibat ketergantungan partai terhadap pemodal besar serta skema pendanaan publik yang akuntabel.",
+        content:
+          "Poin Utama Kertas Kebijakan:\n- Audit terbuka terhadap seluruh sumbangan kampanye pihak ketiga dengan batas maksimal yang diawasi ketat.\n- Peningkatan porsi pendanaan negara untuk pendidikan kader partai yang disertai sanksi pembekuan apabila terbukti melakukan korupsi.\n- Kewajiban publikasi laporan keuangan tahunan partai secara digital dan mudah diakses warga.",
+        docUrl: "https://docs.google.com",
+        docName: "Policy_Brief_Pendanaan_Parpol.pdf",
+        coverGradient: "from-gray-600 via-red-900 to-gray-600",
+        customCover: ""
+      },
+      {
+        id: "pub-5",
+        type: "opinion",
+        category: "hukum",
+        title: "Menyoal Fenomena SLAPP: Kriminalisasi Pembela HAM dan Lingkungan",
+        author: "Lukman Hakim, S.H.",
+        date: "10 November 2026",
+        views: 374,
+        excerpt: "Pasal pencemaran nama baik dan penghinaan kerap digunakan korporasi untuk membungkam kritik warga yang memperjuangkan ruang hidup.",
+        content:
+          "Strategic Lawsuit Against Public Participation (SLAPP) merupakan gugatan hukum atau pelaporan pidana yang ditujukan untuk mengintimidasi dan menguras energi finansial maupun mental para aktivis.\n\nPadahal, Pasal 66 Undang-Undang Nomor 32 Tahun 2009 tentang Perlindungan dan Pengelolaan Lingkungan Hidup secara tegas menyatakan bahwa setiap orang yang memperjuangkan hak atas lingkungan hidup yang baik dan sehat tidak dapat dituntut secara pidana maupun digugat secara perdata. Aparat penegak hukum wajib menerapkan mekanisme anti-SLAPP sejak tahap penyelidikan.",
+        docUrl: "",
+        docName: "",
+        coverGradient: "from-gray-600 via-gray-600 to-gray-500",
+        customCover: ""
+      },
+      {
+        id: "pub-6",
+        type: "report",
+        category: "hukum",
+        title: "Amicus Curiae: Perlindungan Kebebasan Akademik dan Ekspresi Mahasiswa",
+        author: "Tim Advokasi Hukum ST",
+        date: "19 Oktober 2026",
+        views: 196,
+        excerpt: "Dokumen Sahabat Pengadilan yang diajukan dalam perkara pembubaran paksa forum diskusi dan sanksi akademik terhadap pers mahasiswa.",
+        content:
+          "Ringkasan Argumen Hukum:\n1. Kebebasan mimbar akademik dijamin oleh Konstitusi Pasal 28E ayat (3) UUD 1945 dan UU Pendidikan Tinggi.\n2. Penerapan sanksi skorsing tanpa proses pemeriksaan yang adil melanggar asas due process of law.\n3. Meminta Majelis Hakim membatalkan surat keputusan rektorat dan memulihkan nama baik mahasiswa terdampak.",
+        docUrl: "https://docs.google.com",
+        docName: "Amicus_Curiae_Kebebasan_Akademik.pdf",
+        coverGradient: "from-gray-600 via-gray-600 to-gray-500",
+        customCover: ""
+      },
+      {
+        id: "pub-7",
+        type: "opinion",
+        category: "lingkungan",
+        title: "Transisi Energi Hijau yang Melupakan Keadilan Ekologis Warga Lokal",
+        author: "Eka Prasetya",
+        date: "16 November 2026",
+        views: 341,
+        excerpt: "Dekarbonisasi global tidak boleh dijadikan alasan baru untuk merampas hutan adat dan mencemari sumber air demi ekstraksi mineral.",
+        content:
+          "Narasi transisi energi menuju kendaraan listrik sering dipromosikan sebagai solusi tunggal krisis iklim. Namun di hulu rantai pasok, pembukaan tambang nikel dan pembangunan PLTU captive untuk smelter justru memicu deforestasi masif dan sedimentasi wilayah tangkap nelayan.\n\nTransisi energi yang sejati harus bersifat adil (just transition): mengurangi konsumsi energi berlebih di sektor industri ekstraktif, mendesentralisasi pembangkit energi terbarukan berbasis komunitas, serta memulihkan ekosistem yang rusak.",
+        docUrl: "",
+        docName: "",
+        coverGradient: "from-emerald-900 via-gray-600 to-gray-600",
+        customCover: ""
+      },
+      {
+        id: "pub-8",
+        type: "report",
+        category: "lingkungan",
+        title: "Laporan Investigasi Pencemaran Logam Berat di Daerah Aliran Sungai Hulu",
+        author: "Tim Ekologi & Advokasi ST",
+        date: "02 November 2026",
+        views: 508,
+        excerpt: "Hasil uji kualitas air bersama warga menunjukkan kadar merkuri dan timbal melampaui baku mutu akibat pembuangan limbah industri tanpa IPAL.",
+        content:
+          "Temuan Lapangan:\n- Pengambilan sampel di 5 titik sungai menunjukkan penurunan kadar oksigen terlarut dan tingginya kandungan logam berat di sekitar saluran pembuangan pabrik.\n- Lebih dari 400 kepala keluarga kehilangan akses air bersih untuk pertanian sawah dan perikanan tambak.\n\nTuntutan Advokasi:\n- Pencabutan izin lingkungan perusahaan pencemar dan kewajiban pemulihan ekosistem sungai.\n- Kompensasi kerugian ekonomi serta pemeriksaan kesehatan gratis bagi warga terdampak.",
+        docUrl: "https://docs.google.com",
+        docName: "Laporan_Investigasi_DAS_Hulu_2026.pdf",
+        coverGradient: "from-emerald-900 via-gray-600 to-gray-600",
+        customCover: ""
+      }
+    ];
+
+    const INITIAL_EVENTS = [
+      {
+        id: "ev-1",
+        date: "28 Nov 2026 • 19.00 WIB",
+        title: "Meja Bundar #14: Menggugat Pasal Karet & Ancaman SLAPP Terhadap Gerakan Warga",
+        location: "Aula Perpustakaan Rakyat & Zoom Live",
+        category: "Hukum & Politik"
+      },
+      {
+        id: "ev-2",
+        date: "05 Des 2026 • 15.30 WIB",
+        title: "Bedah Kajian: Peta Konflik Agraria dan Krisis Air Bersih di Pesisir",
+        location: "Kedai Literasi Kolektif",
+        category: "Lingkungan & Sosial"
+      }
+    ];
+
+    const INITIAL_ADVOCACY_CASES = [
+      {
+        id: "adv-1",
+        title: "Pendampingan Warga Pesisir Menolak Reklamasi & Tambang Pasir Laut",
+        status: "Berjalan",
+        field: "Lingkungan & Hukum",
+        progress: 70,
+        summary: "Mengawal gugatan tata usaha negara dan menyusun kajian dampak sosial-ekonomi bagi 1.200 keluarga nelayan tradisional."
+      },
+      {
+        id: "adv-2",
+        title: "Klinik Hukum Buruh Kontrak & Pekerja Platform Digital",
+        status: "Berjalan",
+        field: "Sosial & Hukum",
+        progress: 85,
+        summary: "Membuka posko pengaduan pemutusan kemitraan sepihak, penahanan ijazah, serta pendampingan perundingan bipartit."
+      },
+      {
+        id: "adv-3",
+        title: "Advokasi Pembebasan 4 Aktivis Mahasiswa dari Jerat Kriminalisasi Aksi",
+        status: "Menang / Selesai",
+        field: "Politik & Hukum",
+        progress: 100,
+        summary: "Seluruh tuntutan dibatalkan melalui putusan praperadilan dan tekanan solidaritas publik lintas kampus."
+      }
+    ];
+
+    const DEFAULT_CATEGORY_META = {
+      sosial: { label: "Bidang Sosial", icon: "users", desc: "Membedah ketimpangan kelas, perburuhan, pendidikan publik, dan hak atas kota." },
+      politik: { label: "Bidang Politik", icon: "book-open", desc: "Mengkritisi kebijakan publik, oligarki kekuasaan, demokrasi partisipatoris, dan gerakan rakyat." },
+      hukum: { label: "Bidang Hukum", icon: "gavel", desc: "Advokasi bantuan hukum struktural, analisis regulasi, dan perlawanan terhadap kriminalisasi." },
+      lingkungan: { label: "Bidang Lingkungan", icon: "leaf", desc: "Keadilan ekologis, konflik agraria, krisis iklim, dan perlindungan ruang hidup." }
+    };
+
+    const DEFAULT_USERS = []; // Akun kini dikelola Supabase Auth (tidak ada password di kode)
+
+    // --- HELPER LOAD STORAGE ---
+    function loadJSON(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    // --- GLOBAL STATE APLIKASI ---
+    const state = {
+      authUser: null,
+      cloudSyncStatus: "connecting", // 'connecting' | 'synced' | 'offline'
+      users: [],
+      currentUser: null,
+      siteConfig: { ...DEFAULT_SITE_CONFIG, ...loadJSON("st_backup_site_config", {}) },
+      publications: loadJSON("st_backup_publications", INITIAL_PUBLICATIONS),
+      events: loadJSON("st_backup_events", INITIAL_EVENTS),
+      boardMembers: loadJSON("st_backup_board", DEFAULT_BOARD_MEMBERS),
+      advocacyCases: loadJSON("st_backup_advocacy", INITIAL_ADVOCACY_CASES),
+      categoryMeta: { ...DEFAULT_CATEGORY_META, ...loadJSON("st_backup_categories", {}) },
+      siteVisits: 1842,
+
+      // UI & Navigasi
+      activePage: "beranda",
+      selectedCategory: "sosial",
+      isMobileMenuOpen: false,
+      isDropdownOpen: false,
+      activeSectionEditor: null,
+      toastMessage: "",
+      contactSubmitted: false,
+
+      // Modals
+      isCustomizerOpen: false,
+      isLogoEditorOpen: false,
+      logoDraft: null,
+      logoUploadError: "",
+      isMegaManagerOpen: false,
+      megaUrlDraft: null,
+      isExportModalOpen: false,
+      exportedCodeText: "",
+      isUploadModalOpen: false,
+      isSubmitModalOpen: false,
+      isReviewModalOpen: false,
+      submissions: [],
+      submitDraft: {},
+      editingSubmissionId: null,
+      reviewDraft: {},
+      editingPubItem: null,
+      readingItemId: null,
+
+      // Auth Modal
+      isAuthModalOpen: false,
+      authTab: "login",
+      authError: "",
+      registrationNotice: null,
+
+      // Upload Form State
+      uploadForm: {
+        type: "opinion",
+        category: "sosial",
+        title: "",
+        author: "",
+        date: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
+        excerpt: "",
+        content: "",
+        docUrl: "",
+        docName: "",
+        coverGradient: COVER_PRESETS[0].gradient,
+        customCover: ""
+      }
+    };
+
+    function isAdmin() {
+      return state.currentUser?.role === "admin";
+    }
+
+    function getTheme() {
+      return ACCENT_THEMES[state.siteConfig.accentKey] || ACCENT_THEMES.maroon;
+    }
+
+    function saveBackups() {
+      try {
+        localStorage.setItem("st_backup_site_config", JSON.stringify(state.siteConfig));
+        localStorage.setItem("st_backup_publications", JSON.stringify(state.publications));
+        localStorage.setItem("st_backup_events", JSON.stringify(state.events));
+        localStorage.setItem("st_backup_board", JSON.stringify(state.boardMembers));
+        localStorage.setItem("st_backup_advocacy", JSON.stringify(state.advocacyCases));
+        localStorage.setItem("st_backup_categories", JSON.stringify(state.categoryMeta));
+      } catch {}
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      state.toastMessage = msg;
+      render();
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        state.toastMessage = "";
+        render();
+      }, 3400);
+    }
+
+    function softToast(msg) {
+      state.toastMessage = msg;
+      const root = document.getElementById("toast-root");
+      if (root) {
+        root.innerHTML = `<div class="fixed bottom-5 right-5 z-[90] max-w-sm bg-gray-600 text-white px-4 py-3 rounded-lg shadow-xl border border-gray-700 text-sm font-medium">${escapeHtml(msg)}</div>`;
+      }
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        state.toastMessage = "";
+        const r = document.getElementById("toast-root");
+        if (r) r.innerHTML = "";
+      }, 4200);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // --- KOMPRESI GAMBAR OTOMATIS ---
+    function compressImageFile(file, maxWidth = 800, quality = 0.75) {
+      return new Promise((resolve, reject) => {
+        if (file.type === "image/svg+xml") {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+            resolve(canvas.toDataURL(outputType, quality));
+          };
+          img.onerror = reject;
+          img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // --- SYNC CLOUD SUPABASE ---
+    // Semua tabel memakai pola: id (text, PK) + data (jsonb) + created_at (bigint)
+    function reportCloudError(err) {
+      console.error("[CLOUD SAVE ERROR]", err);
+      const msg = err?.message || "lihat console (F12)";
+      setTimeout(() => showToast("GAGAL menyimpan ke Cloud: " + msg), 350);
+    }
+
+    async function persistSiteConfig() {
+      saveBackups();
+      if (isAdmin()) await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+    }
+
+    function canWriteCloud() {
+      return !!sb && !!state.authUser;
+    }
+
+    async function cloudUpsert(table, id, obj) {
+      if (!canWriteCloud()) return;
+      const { id: _omit, ...rest } = obj;
+      const { error } = await sb.from(table).upsert({
+        id,
+        data: rest,
+        created_at: obj.createdAt || Date.now()
+      });
+      if (error) { reportCloudError(error); throw error; }
+    }
+
+    async function cloudDelete(table, id) {
+      if (!canWriteCloud()) return;
+      const { error } = await sb.from(table).delete().eq("id", id);
+      if (error) { reportCloudError(error); throw error; }
+    }
+
+    async function syncSettingsToCloud(payload) {
+      if (!canWriteCloud()) return;
+      // Gabungkan dengan data yang sudah ada (setara merge:true di Firestore)
+      const { data: row } = await sb.from(T.settings).select("data").eq("id", "main").maybeSingle();
+      const merged = { ...(row?.data || {}), ...payload, updatedAt: Date.now() };
+      const { error } = await sb.from(T.settings).upsert({ id: "main", data: merged });
+      if (error) { reportCloudError(error); throw error; }
+    }
+
+    async function cloudIncrementViews(pubId) {
+      if (!sb) return;
+      await sb.rpc("increment_publication_views", { pub_id: pubId }).then(() => {}, () => {});
+    }
+
+    async function forceSyncAllToCloud() {
+      if (!isAdmin()) return;
+      saveBackups();
+      if (!canWriteCloud()) {
+        showToast("Tersimpan di penyimpanan browser.");
+        return;
+      }
+      try {
+        await syncSettingsToCloud({
+          siteConfig: state.siteConfig,
+          boardMembers: state.boardMembers,
+          categoryMeta: state.categoryMeta
+        });
+        for (const pub of state.publications) await cloudUpsert(T.publications, pub.id, pub);
+        for (const ev of state.events) await cloudUpsert(T.events, ev.id, ev);
+        for (const adv of state.advocacyCases) await cloudUpsert(T.advocacy, adv.id, adv);
+        showToast("Seluruh perubahan, tulisan & logo berhasil disinkronkan ke Cloud!");
+      } catch (err) {
+        console.error(err);
+        showToast("Tersimpan di cadangan browser.");
+      }
+    }
+
+    // Ubah baris Supabase -> objek aplikasi
+    const rowToItem = (r) => ({ id: r.id, ...(r.data || {}), createdAt: r.created_at || r.data?.createdAt || 0 });
+
+    // --- MUAT PROFIL USER (admin / member) ---
+    async function resolveCurrentUser(user) {
+      if (!user) return null;
+      const metaName = user.user_metadata?.name || user.user_metadata?.full_name;
+      const base = { id: user.id, email: user.email };
+      try {
+        const { data: adm, error: admErr } = await sb.from(T.admins).select("id,name").eq("id", user.id).maybeSingle();
+        if (admErr) {
+          console.error("[ADMIN CHECK] Gagal membaca tabel admins:", admErr);
+          showToast("Cek admin gagal: " + (admErr.message || "lihat console (F12)"));
+        } else if (adm) {
+          console.info("[ADMIN CHECK] Login sebagai ADMIN:", user.email);
+          return { ...base, name: adm.name || metaName || user.email, role: "admin" };
+        } else {
+          console.warn("[ADMIN CHECK] Akun ini TIDAK ada di tabel admins. UID:", user.id, "Email:", user.email);
+        }
+        const { data: mem } = await sb.from(T.users).select("name").eq("id", user.id).maybeSingle();
+        return { ...base, name: mem?.name || metaName || user.email, role: "member" };
+      } catch (err) {
+        console.error("[ADMIN CHECK] Error:", err);
+        return { ...base, name: metaName || user.email, role: "member" };
+      }
+    }
+
+    // --- PENGAJUAN TULISAN DARI MEMBER ---
+    const MAX_PENDING_PER_USER = 5;
+
+    function safeHttpUrl(u) {
+      const v = String(u || "").trim();
+      if (!v) return "";
+      try {
+        const x = new URL(v);
+        return x.protocol === "http:" || x.protocol === "https:" ? x.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function buildSubmissionData(sub, overrides = {}) {
+      return {
+        type: sub.type,
+        category: sub.category,
+        title: sub.title,
+        author: sub.author,
+        excerpt: sub.excerpt || "",
+        content: sub.content,
+        docUrl: sub.docUrl || "",
+        date: sub.date || "",
+        submitterName: sub.submitterName || "",
+        submitterEmail: sub.submitterEmail || "",
+        ...overrides
+      };
+    }
+
+    // Simpan hasil suntingan admin (judul, ringkasan, isi). Penulis & bidang tidak diubah.
+    async function saveSubmissionEdits(id, vals) {
+      const sub = state.submissions.find((x) => x.id === id);
+      if (!sub || !isAdmin()) return false;
+      const title = String(vals.title || "").trim();
+      const excerpt = String(vals.excerpt || "").trim();
+      const content = String(vals.content || "").trim();
+      if (!title || content.length < 50) {
+        softToast("Judul wajib diisi dan isi tulisan minimal 50 karakter.");
+        return false;
+      }
+      const { error } = await sb
+        .from(T.submissions)
+        .update({ data: buildSubmissionData(sub, { title, excerpt, content }) })
+        .eq("id", id);
+      if (error) {
+        console.error("Simpan suntingan gagal:", error);
+        softToast("Gagal menyimpan suntingan: " + (error.message || "lihat console"));
+        return false;
+      }
+      state.editingSubmissionId = null;
+      state.reviewDraft = {};
+      await loadSubmissions();
+      return true;
+    }
+
+    // Terbitkan pengajuan menjadi publikasi resmi
+    async function publishSubmission(sub) {
+      if (!sub || !isAdmin()) return false;
+      const category = state.categoryMeta[sub.category] ? sub.category : "sosial";
+      const link = safeHttpUrl(sub.docUrl);
+      const newPub = {
+        id: `pub-${Date.now()}`,
+        type: sub.type === "report" ? "report" : "opinion",
+        category,
+        title: sub.title,
+        author: sub.author,
+        date: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
+        excerpt: (sub.excerpt || "").trim() || String(sub.content || "").slice(0, 150) + "...",
+        content: sub.content,
+        docUrl: link,
+        docName: link.includes("mega.nz") ? "Dokumen_MEGA.pdf" : "Dokumen_Lampiran.pdf",
+        coverGradient: (COVER_PRESETS.find((c) => c.id === category) || COVER_PRESETS[0]).gradient,
+        customCover: "",
+        views: 0,
+        createdAt: Date.now()
+      };
+      try {
+        await cloudUpsert(T.publications, newPub.id, newPub);
+        const { error } = await sb.from(T.submissions).update({ status: "approved" }).eq("id", sub.id);
+        if (error) throw error;
+        state.publications.unshift(newPub);
+        saveBackups();
+        state.editingSubmissionId = null;
+        state.reviewDraft = {};
+        await loadSubmissions();
+        showToast("Tulisan disetujui dan sudah tayang di Fokus Kajian.");
+        return true;
+      } catch (err) {
+        console.error("Approve gagal:", err);
+        softToast("Gagal menyetujui: " + (err?.message || "lihat console"));
+        return false;
+      }
+    }
+
+    async function loadSubmissions() {
+      if (!sb || !state.authUser) {
+        state.submissions = [];
+        render();
+        return;
+      }
+      const { data, error } = await sb.from(T.submissions).select("*").order("created_at", { ascending: false });
+      if (error) {
+        console.warn("Gagal memuat pengajuan tulisan:", error.message);
+        return;
+      }
+      state.submissions = (data || []).map((r) => ({
+        ...(r.data || {}),
+        id: r.id,
+        status: r.status,
+        userId: r.user_id,
+        createdAt: r.created_at
+      }));
+      render();
+    }
+
+    // --- DATA PUBLIK: AMBIL + REALTIME ---
+    let listenersStarted = false;
+
+    async function loadCollection(table, stateKey, seedList) {
+      const { data, error } = await sb.from(table).select("*");
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        // Kosong: seed dari data lokal hanya jika admin yang login
+        if (isAdmin() && seedList?.length) {
+          for (let i = 0; i < seedList.length; i++) {
+            const item = seedList[i];
+            await cloudUpsert(table, item.id, { ...item, createdAt: item.createdAt || Date.now() - i * 1000 }).catch(() => {});
+          }
+        }
+        return;
+      }
+      const list = data.map(rowToItem).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      state[stateKey] = list;
+      saveBackups();
+      render();
+    }
+
+    async function loadSettings() {
+      const { data, error } = await sb.from(T.settings).select("data").eq("id", "main").maybeSingle();
+      if (error) throw error;
+      state.cloudSyncStatus = "synced";
+      const d = data?.data;
+      if (d) {
+        if (d.siteConfig) state.siteConfig = { ...state.siteConfig, ...d.siteConfig };
+        if (d.boardMembers) state.boardMembers = d.boardMembers;
+        if (d.categoryMeta) state.categoryMeta = { ...state.categoryMeta, ...d.categoryMeta };
+        if (typeof d.siteVisits === "number") state.siteVisits = d.siteVisits;
+        saveBackups();
+      }
+      render();
+    }
+
+    async function startCloudListeners() {
+      if (listenersStarted || !sb) return;
+      listenersStarted = true;
+      try {
+        await loadSettings();
+        // Hitung +1 kunjungan situs sekali per sesi
+        if (!sessionStorage.getItem("st_cloud_visit_counted")) {
+          sessionStorage.setItem("st_cloud_visit_counted", "1");
+          sb.rpc("increment_site_visits").then(({ data }) => {
+            if (typeof data === "number") { state.siteVisits = data; render(); }
+          }, () => {});
+        }
+        await Promise.all([
+          loadCollection(T.publications, "publications", state.publications),
+          loadCollection(T.events, "events", state.events),
+          loadCollection(T.advocacy, "advocacyCases", state.advocacyCases)
+        ]);
+      } catch (err) {
+        console.warn("Supabase tidak tersedia; situs berjalan dengan cadangan lokal.", err);
+        state.cloudSyncStatus = "offline";
+        render();
+        return;
+      }
+
+      // Realtime (aktifkan Replication pada tabel di Supabase; jika tidak, data tetap termuat saat halaman dibuka)
+      try {
+        sb.channel("st-realtime")
+          .on("postgres_changes", { event: "*", schema: "public", table: T.settings }, () => loadSettings().catch(() => {}))
+          .on("postgres_changes", { event: "*", schema: "public", table: T.publications }, () => loadCollection(T.publications, "publications").catch(() => {}))
+          .on("postgres_changes", { event: "*", schema: "public", table: T.events }, () => loadCollection(T.events, "events").catch(() => {}))
+          .on("postgres_changes", { event: "*", schema: "public", table: T.advocacy }, () => loadCollection(T.advocacy, "advocacyCases").catch(() => {}))
+          .on("postgres_changes", { event: "*", schema: "public", table: T.submissions }, () => loadSubmissions().catch(() => {}))
+          .subscribe();
+      } catch {}
+    }
+
+    // --- INISIALISASI SUPABASE AUTH ---
+    if (!sb) {
+      state.cloudSyncStatus = "offline";
+      console.warn("Supabase belum dikonfigurasi (isi SUPABASE_URL & SUPABASE_ANON_KEY). Situs berjalan dengan cadangan lokal.");
+      setTimeout(() => showToast("Mode lokal aktif. Isi SUPABASE_URL & SUPABASE_ANON_KEY di index.html untuk sinkronisasi Cloud."), 500);
+    } else {
+      sb.auth.onAuthStateChange((_event, session) => {
+        // Jangan panggil query Supabase langsung di dalam callback ini (hindari deadlock); tunda dengan setTimeout
+        setTimeout(async () => {
+          state.authUser = session?.user || null;
+          state.currentUser = await resolveCurrentUser(session?.user || null);
+          render();
+          loadSubmissions().catch(() => {});
+          startCloudListeners();
+        }, 0);
+      });
+      sb.auth.getSession().then(({ data }) => {
+        // Pastikan data publik termuat meski belum login
+        if (!data?.session) startCloudListeners();
+      });
+    }
+
+    // --- KOMPONEN TEMPLATE HTML ---
+    function renderBrandLogo(configObj = state.siteConfig, variant = "header", showEditBtn = false) {
+      const theme = getTheme();
+      const shapeCls =
+        configObj.logoShape === "circle"
+          ? "rounded-full"
+          : configObj.logoShape === "frameless"
+          ? "rounded-none"
+          : "rounded-lg";
+
+      const isFrameless = configObj.logoShape === "frameless";
+      const customBgStyle = configObj.logoIconBg ? `style="background-color: ${escapeHtml(configObj.logoIconBg)}"` : "";
+      const iconOpt = LOGO_ICON_OPTIONS.find((o) => o.id === configObj.logoIconId) || LOGO_ICON_OPTIONS[0];
+      const imageSrc =
+        configObj.logoType === "upload"
+          ? configObj.logoImageData
+          : configObj.logoType === "url"
+          ? configObj.logoImageUrl
+          : "";
+
+      const isFooter = variant === "footer";
+      const sizeCls = isFooter ? "w-11 h-11" : "w-10 h-10";
+
+      const visualHtml = imageSrc
+        ? `<div class="${sizeCls} ${shapeCls} overflow-hidden flex items-center justify-center shrink-0 ${
+            isFrameless
+              ? "bg-transparent"
+              : isFooter
+              ? "bg-gray-600 border border-gray-700 shadow-sm"
+              : "bg-white border border-gray-200 shadow-sm"
+          }">
+            <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(configObj.orgName)}" class="w-full h-full ${
+            isFrameless ? "object-contain" : "object-cover"
+          }" />
+          </div>`
+        : `<div ${customBgStyle} class="${sizeCls} ${shapeCls} ${
+            configObj.logoIconBg ? "" : theme.primaryBg
+          } text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0">
+            ${iconOpt.icon ? `<i data-lucide="${iconOpt.icon}" class="w-5 h-5"></i>` : "ST"}
+          </div>`;
+
+      const textHtml =
+        configObj.showLogoText !== false
+          ? `<div>
+              <span class="font-editorial font-extrabold tracking-tight block leading-none ${
+                isFooter ? "text-xl text-white" : "text-xl md:text-2xl text-gray-700"
+              }">${escapeHtml(configObj.orgName)}</span>
+              ${
+                configObj.orgSubtitle
+                  ? `<span class="text-[11px] font-bold uppercase tracking-widest block mt-1 ${
+                      isFooter ? "text-gray-400" : theme.primaryText
+                    }">${escapeHtml(configObj.orgSubtitle)}</span>`
+                  : ""
+              }
+            </div>`
+          : "";
+
+      const editBtnHtml =
+        isAdmin() && showEditBtn
+          ? `<button type="button" data-action="open-logo-editor" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[11px] font-bold transition-colors">
+              <i data-lucide="edit-3" class="w-3 h-3"></i>
+              <span>Edit Logo</span>
+            </button>`
+          : "";
+
+      return `
+        <div class="inline-flex items-center gap-3">
+          <div data-action="nav" data-page="beranda" class="flex items-center gap-3 cursor-pointer">
+            ${visualHtml}
+            ${textHtml}
+          </div>
+          ${editBtnHtml}
+        </div>
+      `;
+    }
+
+    function renderAdminSectionBtn(sectionKey, label = "Edit Bagian") {
+      if (!isAdmin()) return "";
+      const isOpen = state.activeSectionEditor === sectionKey;
+      return `
+        <button type="button" data-action="toggle-section-editor" data-section="${sectionKey}"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs ${
+            isOpen
+              ? "bg-amber-400 text-gray-700"
+              : "bg-gray-600/90 text-amber-300 border border-amber-400/50 hover:bg-gray-700"
+          }">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+          <span>${isOpen ? "Tutup Editor" : escapeHtml(label)}</span>
+        </button>
+      `;
+    }
+
+    function renderPublicationCard(item) {
+      const theme = getTheme();
+      const catMeta = state.categoryMeta[item.category] || state.categoryMeta.sosial;
+      const isList = state.siteConfig.layoutMode === "list";
+      const bodySize = state.siteConfig.fontSize === "large" ? "text-base md:text-lg" : "text-sm md:text-base";
+
+      return `
+        <article class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all flex ${
+          isList ? "flex-col md:flex-row" : "flex-col"
+        } relative">
+          <div data-action="open-pub" data-id="${escapeHtml(item.id)}"
+            class="${
+              isList ? "md:w-64 h-44 md:h-auto shrink-0" : "h-40 w-full"
+            } bg-gradient-to-br ${escapeHtml(item.coverGradient)} relative overflow-hidden flex flex-col justify-between p-4 text-white cursor-pointer">
+            ${
+              item.customCover
+                ? `<img src="${escapeHtml(item.customCover)}" alt="${escapeHtml(item.title)}" class="absolute inset-0 w-full h-full object-cover opacity-55" />`
+                : ""
+            }
+            <div class="relative z-10 flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-gray-700/60 backdrop-blur-sm border border-white/15">
+                ${item.type === "report" ? "Kajian / Laporan" : "Tulisan / Opini"}
+              </span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/15">
+                ${escapeHtml(catMeta.label.replace("Bidang ", ""))}
+              </span>
+            </div>
+            <div class="relative z-10 flex items-center justify-between text-xs text-gray-200 font-medium">
+              <span>${escapeHtml(item.date)}</span>
+              <span class="inline-flex items-center gap-1 bg-gray-700/50 px-2 py-0.5 rounded text-[11px]">
+                <i data-lucide="eye" class="w-3 h-3 text-amber-300"></i> ${item.views || 0}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 data-action="open-pub" data-id="${escapeHtml(item.id)}"
+                class="font-editorial text-lg md:text-xl font-bold text-gray-600 mb-2 leading-snug cursor-pointer hover:underline">
+                ${escapeHtml(item.title)}
+              </h3>
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 mb-3">
+                <span>Oleh <span class="font-semibold text-gray-500">${escapeHtml(item.author)}</span></span>
+                <span class="inline-flex items-center gap-1 font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 ${theme.primaryText}"></i> ${(item.views || 0).toLocaleString("id-ID")} kali dibaca
+                </span>
+              </div>
+              <p class="text-gray-600 leading-relaxed mb-4 ${bodySize}">
+                ${escapeHtml(item.excerpt)}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <button type="button" data-action="open-pub" data-id="${escapeHtml(item.id)}"
+                class="inline-flex items-center font-bold text-sm ${theme.primaryText} hover:opacity-80">
+                Baca Selengkapnya <i data-lucide="arrow-right" class="w-4 h-4 ml-1.5"></i>
+              </button>
+
+              <div class="flex items-center gap-2">
+                ${
+                  item.docUrl
+                    ? `<a href="${escapeHtml(item.docUrl)}" target="_blank" rel="noopener noreferrer"
+                        data-action="inc-download-view" data-id="${escapeHtml(item.id)}"
+                        class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 mr-1"></i> Dokumen
+                      </a>`
+                    : ""
+                }
+                ${
+                  isAdmin()
+                    ? `<button type="button" data-action="edit-pub" data-id="${escapeHtml(item.id)}"
+                        class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-amber-100 text-amber-900 hover:bg-amber-200">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5 mr-1"></i> Edit
+                      </button>
+                      <button type="button" data-action="delete-pub" data-id="${escapeHtml(item.id)}"
+                        class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>`
+                    : ""
+                }
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    // --- RENDER UTAMA ---
+    function render() {
+      const theme = getTheme();
+      const admin = isAdmin();
+      const bodySize = state.siteConfig.fontSize === "large" ? "text-base md:text-lg" : "text-sm md:text-base";
+      const totalReads = state.publications.reduce((acc, item) => acc + (item.views || 0), 0);
+      const readingItem = state.publications.find((p) => p.id === state.readingItemId) || null;
+
+      const toastHtml = state.toastMessage
+        ? `<div class="fixed bottom-5 right-5 z-[80] bg-gray-600 text-white px-4 py-3 rounded-lg shadow-xl border border-gray-700 flex items-center gap-2.5 text-sm font-medium">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <span>${escapeHtml(state.toastMessage)}</span>
+          </div>`
+        : "";
+
+      const adminBarHtml = admin
+        ? `<div class="bg-gray-600 text-amber-300 border-b border-amber-500/30 px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 z-50">
+            <div class="flex items-center gap-2">
+              <i data-lucide="shield" class="w-4 h-4 text-amber-400 shrink-0"></i>
+              <span>ADMIN: ${escapeHtml(state.currentUser.name)}</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] ${
+                state.cloudSyncStatus === "synced"
+                  ? "bg-emerald-900 text-emerald-300 border border-emerald-700"
+                  : "bg-amber-950 text-amber-300 border border-amber-700"
+              }">
+                <i data-lucide="cloud" class="w-3 h-3"></i> ${
+                  state.cloudSyncStatus === "synced" ? "Cloud Tersinkron" : "Menyimpan Lokal"
+                }
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" data-action="force-sync" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs hover:bg-emerald-500 inline-flex items-center gap-1">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Semua ke Cloud
+              </button>
+              <button type="button" data-action="open-mega-manager" class="bg-red-800 text-white border border-red-600 px-3 py-1 rounded text-xs hover:bg-red-700 inline-flex items-center gap-1">
+                <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> Folder MEGA
+              </button>
+              <button type="button" data-action="open-backup" class="bg-gray-500 text-gray-200 border border-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-700 inline-flex items-center gap-1">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Cadangkan Data
+              </button>
+              <button type="button" data-action="toggle-customizer" class="bg-amber-400 text-gray-700 px-3 py-1 rounded text-xs hover:bg-amber-300">
+                ${state.isCustomizerOpen ? "Tutup Panel Tampilan" : "Edit Tampilan Global"}
+              </button>
+              <button type="button" data-action="open-upload" class="bg-red-700 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                + Upload Kajian/Tulisan
+              </button>
+              <button type="button" data-action="open-review" class="bg-amber-400 text-gray-700 px-3 py-1 rounded text-xs hover:bg-amber-300 inline-flex items-center gap-1">
+                <i data-lucide="inbox" class="w-3.5 h-3.5"></i> Tulisan Masuk (${state.submissions.filter((x) => x.status === "pending").length})
+              </button>
+            </div>
+          </div>`
+        : "";
+
+      const navbarHtml = `
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between py-3 gap-3">
+              <div class="shrink-0">${renderBrandLogo(state.siteConfig, "header", true)}</div>
+
+              <nav class="hidden lg:flex items-center space-x-5">
+                <button type="button" data-action="nav" data-page="beranda" class="text-sm font-bold py-1 ${
+                  state.activePage === "beranda" ? `${theme.primaryText} border-b-2 ${theme.primaryBorder}` : "text-gray-600 hover:text-gray-700"
+                }">Beranda</button>
+                <button type="button" data-action="nav" data-page="tentang" class="text-sm font-bold py-1 ${
+                  state.activePage === "tentang" ? `${theme.primaryText} border-b-2 ${theme.primaryBorder}` : "text-gray-600 hover:text-gray-700"
+                }">Tentang Kami</button>
+                <div class="relative group">
+                  <button type="button" data-action="nav" data-page="fokus" class="text-sm font-bold py-1 inline-flex items-center gap-1 ${
+                    state.activePage === "fokus" ? `${theme.primaryText} border-b-2 ${theme.primaryBorder}` : "text-gray-600 hover:text-gray-700"
+                  }">Fokus Kajian <i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                  <div class="hidden group-hover:block absolute left-0 pt-1 w-56 z-50">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-xl py-2">
+                      ${Object.entries(state.categoryMeta)
+                        .map(
+                          ([key, meta]) => `
+                          <button type="button" data-action="open-category" data-cat="${key}"
+                            class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-100 flex items-center gap-2.5">
+                            <i data-lucide="${meta.icon}" class="w-4 h-4 ${theme.primaryText}"></i>
+                            <span>${escapeHtml(meta.label)}</span>
+                          </button>`
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                </div>
+                <button type="button" data-action="nav" data-page="advokasi" class="text-sm font-bold py-1 ${
+                  state.activePage === "advokasi" ? `${theme.primaryText} border-b-2 ${theme.primaryBorder}` : "text-gray-600 hover:text-gray-700"
+                }">Ruang Advokasi</button>
+                <button type="button" data-action="nav" data-page="kontak" class="text-sm font-bold py-1 ${
+                  state.activePage === "kontak" ? `${theme.primaryText} border-b-2 ${theme.primaryBorder}` : "text-gray-600 hover:text-gray-700"
+                }">Kontak</button>
+              </nav>
+
+              <div class="hidden lg:flex items-center gap-2.5">
+                ${
+                  admin
+                    ? `<button type="button" data-action="open-upload"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-white shadow-sm ${theme.primaryBg} ${theme.primaryHover}">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>+ Upload Kajian & Tulisan</span>
+                      </button>`
+                    : ""
+                }
+                ${
+                  state.currentUser
+                    ? `<div class="flex items-center gap-2 pl-2 border-l border-gray-200">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600">
+                          <i data-lucide="user-check" class="w-3.5 h-3.5 ${theme.primaryText}"></i>
+                          <span class="max-w-[130px] truncate">${escapeHtml(state.currentUser.name)}</span>
+                        </span>
+                        <button type="button" data-action="logout" class="p-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100" title="Keluar Akun">
+                          <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </button>
+                      </div>`
+                    : `<button type="button" data-action="open-auth" data-tab="login"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-gray-600 text-white hover:bg-gray-700">
+                        <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                        <span>Masuk / Daftar</span>
+                      </button>`
+                }
+              </div>
+
+              <div class="flex lg:hidden items-center gap-2">
+                ${
+                  !state.currentUser
+                    ? `<button type="button" data-action="open-auth" data-tab="login" class="px-2.5 py-1.5 rounded-lg bg-gray-600 text-white text-xs font-bold">Masuk</button>`
+                    : ""
+                }
+                <button type="button" data-action="toggle-mobile-menu" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                  <i data-lucide="${state.isMobileMenuOpen ? "x" : "menu"}" class="w-6 h-6"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          ${
+            state.isMobileMenuOpen
+              ? `<div class="lg:hidden bg-white border-t border-gray-200 px-4 pt-3 pb-5 space-y-2 shadow-lg">
+                  <button type="button" data-action="nav" data-page="beranda" class="block w-full text-left py-2 font-bold text-sm">Beranda</button>
+                  <button type="button" data-action="nav" data-page="tentang" class="block w-full text-left py-2 font-bold text-sm">Tentang Kami</button>
+                  <div class="py-1 pl-3 border-l-2 border-gray-200 space-y-1.5">
+                    <span class="text-[11px] font-bold uppercase text-gray-400 block">Fokus Kajian</span>
+                    ${Object.entries(state.categoryMeta)
+                      .map(
+                        ([key, meta]) =>
+                          `<button type="button" data-action="open-category" data-cat="${key}" class="block w-full text-left py-1 text-sm font-semibold text-gray-700">${escapeHtml(
+                            meta.label
+                          )}</button>`
+                      )
+                      .join("")}
+                  </div>
+                  <button type="button" data-action="nav" data-page="advokasi" class="block w-full text-left py-2 font-bold text-sm">Ruang Advokasi</button>
+                  <button type="button" data-action="nav" data-page="kontak" class="block w-full text-left py-2 font-bold text-sm">Kontak</button>
+                  <div class="pt-3 border-t border-gray-200 flex flex-col gap-2">
+                    ${
+                      admin
+                        ? `<button type="button" data-action="open-upload" class="w-full py-2.5 rounded-lg text-xs font-bold text-white ${theme.primaryBg}">+ Upload Kajian & Tulisan</button>
+                           <button type="button" data-action="open-logo-editor" class="w-full py-2 rounded-lg text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">Edit Logo Organisasi</button>`
+                        : ""
+                    }
+                    ${
+                      state.currentUser
+                        ? `<button type="button" data-action="logout" class="w-full py-2 rounded-lg text-xs font-bold border border-gray-300 text-gray-500">Keluar (${escapeHtml(
+                            state.currentUser.name
+                          )})</button>`
+                        : `<button type="button" data-action="open-auth" data-tab="register" class="w-full py-2 rounded-lg text-xs font-bold bg-gray-600 text-white">Buat Akun Baru</button>`
+                    }
+                  </div>
+                </div>`
+              : ""
+          }
+        </header>
+      `;
+
+      // --- HALAMAN 1: BERANDA ---
+      const berandaHtml = `
+        <div>
+          <section class="${state.siteConfig.heroBgClass} text-white py-14 md:py-20 px-4 sm:px-6 lg:px-8 border-b-4 ${theme.primaryBorder}">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              <div class="lg:col-span-7 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded ${theme.primaryBg} text-white">
+                    Kolektif Dialektika & Gerakan Struktural
+                  </span>
+                  ${renderAdminSectionBtn("hero", "Edit Bagian Hero")}
+                </div>
+
+                ${
+                  admin && state.activeSectionEditor === "hero"
+                    ? `<form id="hero-editor-form" class="bg-gray-600 border border-amber-400 rounded-xl p-5 space-y-3">
+                        <label class="block text-xs font-bold uppercase text-amber-300">Judul Utama (Hero Tagline):</label>
+                        <input type="text" name="heroTagline" value="${escapeHtml(state.siteConfig.heroTagline)}" class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-lg font-bold text-white" />
+                        <label class="block text-xs font-bold uppercase text-amber-300">Deskripsi Pengantar:</label>
+                        <textarea name="heroDescription" rows="3" class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">${escapeHtml(
+                          state.siteConfig.heroDescription
+                        )}</textarea>
+                        <button type="submit" class="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5">
+                          <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan & Selesai Edit
+                        </button>
+                      </form>`
+                    : `<h1 class="font-editorial text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">${escapeHtml(
+                        state.siteConfig.heroTagline
+                      )}</h1>
+                      <p class="text-gray-300 text-base md:text-lg leading-relaxed max-w-2xl">${escapeHtml(
+                        state.siteConfig.heroDescription
+                      )}</p>`
+                }
+
+                <div class="pt-2 flex flex-wrap gap-3">
+                  <button type="button" data-action="nav" data-page="fokus" class="${theme.primaryBg} ${theme.primaryHover} text-white font-bold px-6 py-3 rounded-lg text-sm inline-flex items-center gap-2 shadow-lg">
+                    Jelajahi Kajian & Tulisan <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                  </button>
+                  <button type="button" data-action="nav" data-page="advokasi" class="bg-gray-500 hover:bg-gray-700 text-white font-bold px-6 py-3 rounded-lg text-sm border border-gray-700">
+                    Lihat Ruang Advokasi
+                  </button>
+                </div>
+              </div>
+
+              <div class="lg:col-span-5 bg-gray-600/90 border border-gray-500 rounded-2xl p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-500">
+                  <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <i data-lucide="calendar" class="w-4 h-4"></i> Agenda Diskusi Terdekat
+                  </span>
+                  ${renderAdminSectionBtn("events", "Edit Agenda")}
+                </div>
+
+                ${
+                  admin && state.activeSectionEditor === "events"
+                    ? `<form id="add-event-form" class="mb-4 p-3 rounded-lg bg-gray-700 border border-amber-400/50 space-y-2 text-xs">
+                        <span class="font-bold text-amber-300 block">Tambah Agenda Diskusi Baru:</span>
+                        <input type="text" name="date" required placeholder="Waktu (mis: 12 Des 2026 • 19.00 WIB)" class="w-full bg-gray-600 border border-gray-700 rounded px-2.5 py-1.5 text-white" />
+                        <input type="text" name="title" required placeholder="Judul Diskusi" class="w-full bg-gray-600 border border-gray-700 rounded px-2.5 py-1.5 text-white" />
+                        <input type="text" name="location" required placeholder="Lokasi / Link Zoom" class="w-full bg-gray-600 border border-gray-700 rounded px-2.5 py-1.5 text-white" />
+                        <button type="submit" class="w-full bg-amber-400 text-gray-700 font-bold py-1.5 rounded">+ Tambah Agenda</button>
+                      </form>`
+                    : ""
+                }
+
+                <div class="space-y-4">
+                  ${state.events
+                    .map(
+                      (ev) => `
+                      <div class="p-3.5 rounded-lg bg-gray-700/80 border border-gray-500/80">
+                        <div class="flex justify-between items-start gap-2">
+                          <span class="text-[11px] font-bold text-red-400 block mb-1">${escapeHtml(ev.date)}</span>
+                          ${
+                            admin && state.activeSectionEditor === "events"
+                              ? `<button type="button" data-action="delete-event" data-id="${escapeHtml(ev.id)}" class="text-red-400 hover:text-red-300">
+                                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>`
+                              : ""
+                          }
+                        </div>
+                        <h3 class="font-bold text-sm text-white leading-snug mb-2">${escapeHtml(ev.title)}</h3>
+                        <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                          <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0"></i> ${escapeHtml(ev.location)}
+                        </p>
+                      </div>`
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-white border-b border-gray-200 py-5 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200/80">
+                <div class="p-2.5 rounded-lg ${theme.lightBg} ${theme.primaryText}"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
+                <div>
+                  <span class="text-lg md:text-xl font-extrabold text-gray-700 block leading-none">${state.siteVisits.toLocaleString("id-ID")}</span>
+                  <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Total Kunjungan Situs</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200/80">
+                <div class="p-2.5 rounded-lg ${theme.lightBg} ${theme.primaryText}"><i data-lucide="eye" class="w-5 h-5"></i></div>
+                <div>
+                  <span class="text-lg md:text-xl font-extrabold text-gray-700 block leading-none">${totalReads.toLocaleString("id-ID")}</span>
+                  <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Total Kali Dibaca</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200/80">
+                <div class="p-2.5 rounded-lg ${theme.lightBg} ${theme.primaryText}"><i data-lucide="book-open" class="w-5 h-5"></i></div>
+                <div>
+                  <span class="text-lg md:text-xl font-extrabold text-gray-700 block leading-none">${state.publications.length}</span>
+                  <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Tulisan & Kajian</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200/80">
+                <div class="p-2.5 rounded-lg ${theme.lightBg} ${theme.primaryText}"><i data-lucide="gavel" class="w-5 h-5"></i></div>
+                <div>
+                  <span class="text-lg md:text-xl font-extrabold text-gray-700 block leading-none">${state.advocacyCases.length}</span>
+                  <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Kasus Advokasi Aktif</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div class="mb-8">
+              <h2 class="font-editorial text-2xl md:text-3xl font-extrabold text-gray-600">Empat Pilar Diskusi & Advokasi</h2>
+              <p class="text-gray-600 text-sm md:text-base mt-1">Pilih bidang untuk membaca arsip opini dan mengunduh dokumen kajian advokasi.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              ${Object.entries(state.categoryMeta)
+                .map(([key, meta]) => {
+                  const count = state.publications.filter((p) => p.category === key).length;
+                  return `
+                    <div data-action="open-category" data-cat="${key}"
+                      class="bg-white border border-gray-200 hover:border-gray-600 rounded-xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col justify-between group">
+                      <div>
+                        <div class="w-11 h-11 rounded-lg ${theme.lightBg} ${theme.primaryText} flex items-center justify-center mb-4">
+                          <i data-lucide="${meta.icon}" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-extrabold text-lg text-gray-600 mb-2 group-hover:underline">${escapeHtml(meta.label)}</h3>
+                        <p class="text-xs md:text-sm text-gray-600 leading-relaxed mb-4">${escapeHtml(meta.desc)}</p>
+                      </div>
+                      <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold">
+                        <span class="text-gray-500">${count} Publikasi</span>
+                        <span class="${theme.primaryText} flex items-center gap-1">Buka Bidang <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></span>
+                      </div>
+                    </div>`;
+                })
+                .join("")}
+            </div>
+          </section>
+
+          <section class="py-12 px-4 sm:px-6 lg:px-8 bg-gray-100/80 border-t border-gray-200">
+            <div class="max-w-7xl mx-auto">
+              <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 class="font-editorial text-2xl md:text-3xl font-extrabold text-gray-600">Tulisan & Kajian Terbaru</h2>
+                  <p class="text-gray-600 text-sm mt-1">Klik judul untuk membaca lengkap. Jumlah pembaca tercatat secara otomatis.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  ${
+                    admin
+                      ? `<button type="button" data-action="open-upload" class="text-xs font-bold px-3 py-2 rounded-lg text-white ${theme.primaryBg}">+ Upload Baru</button>`
+                      : ""
+                  }
+                  <button type="button" data-action="nav" data-page="fokus" class="text-sm font-bold ${theme.primaryText} hover:underline flex items-center gap-1">
+                    Lihat Semua Arsip <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="grid gap-6 ${state.siteConfig.layoutMode === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"}">
+                ${state.publications.slice(0, 6).map(renderPublicationCard).join("")}
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+
+      // --- HALAMAN 2: TENTANG KAMI ---
+      const tentangHtml = `
+        <div class="py-14 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
+          <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-10 shadow-sm space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-widest ${theme.primaryText}">Profil Kolektif</span>
+              ${renderAdminSectionBtn("about_intro", "Edit Profil, Sejarah & Visi Misi")}
+            </div>
+            <h1 class="font-editorial text-3xl md:text-4xl font-extrabold text-gray-700">Mengenal ${escapeHtml(state.siteConfig.orgName)}</h1>
+
+            ${
+              admin && state.activeSectionEditor === "about_intro"
+                ? `<form id="about-intro-form" class="space-y-4 bg-amber-50/70 border border-amber-300 rounded-xl p-5">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Pengantar Organisasi:</label>
+                      <textarea name="aboutIntro" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white">${escapeHtml(
+                        state.siteConfig.aboutIntro
+                      )}</textarea>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Latar Belakang & Sejarah:</label>
+                      <textarea name="aboutHistory" rows="3" class="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white">${escapeHtml(
+                        state.siteConfig.aboutHistory
+                      )}</textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Visi:</label>
+                        <textarea name="aboutVision" rows="4" class="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white">${escapeHtml(
+                          state.siteConfig.aboutVision
+                        )}</textarea>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Misi:</label>
+                        <textarea name="aboutMission" rows="4" class="w-full border border-gray-300 rounded-lg p-3 text-sm bg-white">${escapeHtml(
+                          state.siteConfig.aboutMission
+                        )}</textarea>
+                      </div>
+                    </div>
+                    <button type="submit" class="bg-emerald-800 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Profil & Visi Misi
+                    </button>
+                  </form>`
+                : `<p class="text-gray-700 leading-relaxed ${bodySize}">${escapeHtml(state.siteConfig.aboutIntro)}</p>
+                  <p class="text-gray-600 leading-relaxed ${bodySize}">${escapeHtml(state.siteConfig.aboutHistory)}</p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div class="p-6 rounded-xl ${theme.lightBg} border ${theme.primaryBorder}">
+                      <h2 class="font-extrabold text-lg mb-2 ${theme.primaryText}">Visi Kolektif</h2>
+                      <p class="text-sm text-gray-500 leading-relaxed">${escapeHtml(state.siteConfig.aboutVision)}</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-gray-100 border border-gray-200">
+                      <h2 class="font-extrabold text-lg text-gray-600 mb-2">Misi Gerakan</h2>
+                      <p class="text-sm text-gray-500 leading-relaxed whitespace-pre-line">${escapeHtml(state.siteConfig.aboutMission)}</p>
+                    </div>
+                  </div>`
+            }
+          </div>
+
+          <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-10 shadow-sm space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="font-editorial text-2xl font-extrabold text-gray-700">Koordinator & Tim Kerja Kolektif</h2>
+                <p class="text-xs md:text-sm text-gray-500 mt-1">Simpul koordinasi riset, publikasi, dan pendampingan advokasi.</p>
+              </div>
+              ${renderAdminSectionBtn("about_board", "Edit Struktur Pengurus")}
+            </div>
+
+            ${
+              admin && state.activeSectionEditor === "about_board"
+                ? `<form id="add-board-form" class="p-4 rounded-xl bg-amber-50 border border-amber-300 space-y-3 text-xs">
+                    <span class="font-bold text-amber-950 block">Tambah Koordinator / Pengurus Baru:</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input type="text" name="name" required placeholder="Nama Lengkap & Gelar" class="border border-gray-300 rounded px-3 py-2 bg-white" />
+                      <input type="text" name="role" required placeholder="Jabatan / Divisi" class="border border-gray-300 rounded px-3 py-2 bg-white" />
+                      <input type="text" name="focus" required placeholder="Fokus Kajian" class="border border-gray-300 rounded px-3 py-2 bg-white" />
+                    </div>
+                    <button type="submit" class="${theme.primaryBg} text-white font-bold px-4 py-2 rounded-lg">+ Tambah Anggota Tim</button>
+                  </form>`
+                : ""
+            }
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+              ${state.boardMembers
+                .map(
+                  (m) => `
+                  <div class="p-5 rounded-xl bg-gray-50 border border-gray-200 relative">
+                    ${
+                      admin && state.activeSectionEditor === "about_board"
+                        ? `<button type="button" data-action="delete-board" data-id="${escapeHtml(m.id)}" class="absolute top-3 right-3 text-red-700 hover:bg-red-50 p-1 rounded">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                          </button>`
+                        : ""
+                    }
+                    <div class="w-10 h-10 rounded-full ${theme.primaryBg} text-white font-bold flex items-center justify-center mb-3">
+                      ${escapeHtml(m.name.charAt(0).toUpperCase())}
+                    </div>
+                    <h3 class="font-extrabold text-base text-gray-600">${escapeHtml(m.name)}</h3>
+                    <p class="text-xs font-bold ${theme.primaryText} mt-0.5">${escapeHtml(m.role)}</p>
+                    <p class="text-xs text-gray-500 mt-2">Fokus: ${escapeHtml(m.focus)}</p>
+                  </div>`
+                )
+                .join("")}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // --- HALAMAN 3: FOKUS KAJIAN ---
+      const currentCat = state.categoryMeta[state.selectedCategory] || state.categoryMeta.sosial;
+      const megaMap = {
+        sosial: state.siteConfig.megaFolderSosialUrl,
+        politik: state.siteConfig.megaFolderPolitikUrl,
+        hukum: state.siteConfig.megaFolderHukumUrl,
+        lingkungan: state.siteConfig.megaFolderLingkunganUrl
+      };
+      const activeMegaLink = megaMap[state.selectedCategory] || state.siteConfig.megaRootFolderUrl;
+      const opinions = state.publications.filter((p) => p.category === state.selectedCategory && p.type === "opinion");
+      const reports = state.publications.filter((p) => p.category === state.selectedCategory && p.type === "report");
+
+      const fokusHtml = `
+        <div class="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4">
+            <div class="flex flex-wrap gap-2">
+              ${Object.entries(state.categoryMeta)
+                .map(([key, meta]) => {
+                  const active = state.selectedCategory === key;
+                  return `<button type="button" data-action="open-category" data-cat="${key}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${
+                      active ? `${theme.primaryBg} text-white shadow-sm` : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                    }">
+                    <i data-lucide="${meta.icon}" class="w-4 h-4"></i>
+                    <span>${escapeHtml(meta.label)}</span>
+                  </button>`;
+                })
+                .join("")}
+            </div>
+            ${
+              admin
+                ? `<div class="flex flex-wrap items-center gap-2">
+                    <button type="button" data-action="open-upload" data-default-cat="${state.selectedCategory}"
+                      class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold text-white ${theme.primaryBg}">
+                      <i data-lucide="plus-circle" class="w-4 h-4"></i> + Upload ke ${escapeHtml(currentCat.label)}
+                    </button>
+                    <button type="button" data-action="open-review"
+                      class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200">
+                      <i data-lucide="inbox" class="w-4 h-4"></i> Tulisan Masuk (${state.submissions.filter((x) => x.status === "pending").length})
+                    </button>
+                  </div>`
+                : `<button type="button" data-action="open-submit" data-default-cat="${state.selectedCategory}"
+                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold text-white ${theme.primaryBg}">
+                    <i data-lucide="send" class="w-4 h-4"></i> Ajukan Tulisan ke ${escapeHtml(currentCat.label)}
+                  </button>`
+            }
+          </div>
+
+          <section class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="max-w-3xl">
+                <span class="text-xs font-bold uppercase tracking-widest ${theme.primaryText}">Ruang Diskusi & Arsip Publikasi</span>
+                <h1 class="font-editorial text-3xl md:text-4xl font-extrabold text-gray-700 mt-1">${escapeHtml(currentCat.label)}</h1>
+                ${
+                  admin && state.activeSectionEditor === "category_info"
+                    ? `<form id="category-desc-form" class="mt-3 space-y-2">
+                        <textarea name="desc" rows="2" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">${escapeHtml(
+                          currentCat.desc
+                        )}</textarea>
+                        <button type="submit" class="bg-emerald-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                          <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Deskripsi
+                        </button>
+                      </form>`
+                    : `<p class="text-gray-600 text-sm md:text-base mt-2 leading-relaxed">${escapeHtml(currentCat.desc)}</p>`
+                }
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                ${
+                  activeMegaLink
+                    ? `<a href="${escapeHtml(activeMegaLink)}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-900 border border-red-200 text-xs font-bold">
+                        <i data-lucide="folder-open" class="w-3.5 h-3.5"></i> Arsip MEGA ${escapeHtml(
+                          currentCat.label.replace("Bidang ", "")
+                        )}
+                      </a>`
+                    : ""
+                }
+                ${renderAdminSectionBtn("category_info", "Edit Deskripsi Bidang")}
+              </div>
+            </div>
+          </section>
+
+          <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-gray-200 pb-2.5">
+                <h2 class="font-extrabold text-lg text-gray-600 flex items-center gap-2">
+                  <i data-lucide="book-open" class="w-4 h-4 ${theme.primaryText}"></i>
+                  <span>Tulisan & Opini</span>
+                </h2>
+                <span class="text-xs font-bold text-gray-500">${opinions.length} Artikel</span>
+              </div>
+              <div class="space-y-4">
+                ${
+                  opinions.length
+                    ? opinions.map(renderPublicationCard).join("")
+                    : `<div class="bg-white border border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-500 text-sm">Belum ada tulisan/opini pada bidang ini.</div>`
+                }
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-gray-200 pb-2.5">
+                <h2 class="font-extrabold text-lg text-gray-600 flex items-center gap-2">
+                  <i data-lucide="file-text" class="w-4 h-4 ${theme.primaryText}"></i>
+                  <span>Kajian & Laporan Advokasi</span>
+                </h2>
+                <span class="text-xs font-bold text-gray-500">${reports.length} Dokumen</span>
+              </div>
+              <div class="space-y-4">
+                ${
+                  reports.length
+                    ? reports.map(renderPublicationCard).join("")
+                    : `<div class="bg-white border border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-500 text-sm">Belum ada kajian/laporan advokasi pada bidang ini.</div>`
+                }
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+
+      // --- HALAMAN 4: RUANG ADVOKASI ---
+      const advokasiHtml = `
+        <div class="py-14 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-10">
+          <div class="bg-gray-700 text-white rounded-2xl p-6 md:p-10 border-b-4 border-red-800 shadow-lg">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Kampanye & Pendampingan Struktural</span>
+              ${renderAdminSectionBtn("advocacy_list", "Kelola Kampanye & Kasus Advokasi")}
+            </div>
+            <h1 class="font-editorial text-2xl md:text-4xl font-extrabold leading-tight mb-3">${escapeHtml(
+              state.siteConfig.advocacyHighlightTitle
+            )}</h1>
+            <p class="text-gray-300 text-sm md:text-base leading-relaxed max-w-3xl">${escapeHtml(
+              state.siteConfig.advocacyHighlightDesc
+            )}</p>
+          </div>
+
+          ${
+            admin && state.activeSectionEditor === "advocacy_list"
+              ? `<div class="bg-amber-50 border border-amber-400 rounded-2xl p-6 space-y-4">
+                  <form id="advocacy-highlight-form" class="space-y-3">
+                    <h3 class="font-extrabold text-sm text-amber-950 uppercase">Edit Sorotan Utama Advokasi</h3>
+                    <input type="text" name="advocacyHighlightTitle" value="${escapeHtml(
+                      state.siteConfig.advocacyHighlightTitle
+                    )}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold bg-white" />
+                    <textarea name="advocacyHighlightDesc" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">${escapeHtml(
+                      state.siteConfig.advocacyHighlightDesc
+                    )}</textarea>
+                    <button type="submit" class="bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5">
+                      <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Sorotan Utama
+                    </button>
+                  </form>
+
+                  <form id="add-advocacy-form" class="pt-4 border-t border-amber-300 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="text" name="title" required placeholder="Judul Kasus / Pendampingan Baru" class="border border-gray-300 rounded-lg px-3 py-2 text-xs bg-white" />
+                    <div class="grid grid-cols-3 gap-2">
+                      <select name="status" class="border border-gray-300 rounded-lg px-2 py-2 text-xs bg-white">
+                        <option value="Berjalan">Berjalan</option>
+                        <option value="Menang / Selesai">Menang / Selesai</option>
+                        <option value="Darurat">Darurat</option>
+                      </select>
+                      <input type="text" name="field" value="Hukum & Sosial" placeholder="Bidang" class="border border-gray-300 rounded-lg px-2 py-2 text-xs bg-white" />
+                      <input type="number" name="progress" min="0" max="100" value="50" class="border border-gray-300 rounded-lg px-2 py-2 text-xs bg-white" />
+                    </div>
+                    <textarea name="summary" rows="2" required placeholder="Ringkasan perkembangan kasus..." class="md:col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-xs bg-white"></textarea>
+                    <button type="submit" class="md:col-span-2 ${theme.primaryBg} text-white py-2 rounded-lg text-xs font-bold">+ Tambah Kasus Advokasi</button>
+                  </form>
+                </div>`
+              : ""
+          }
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${state.advocacyCases
+              .map(
+                (c) => `
+                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col justify-between relative">
+                  ${
+                    admin && state.activeSectionEditor === "advocacy_list"
+                      ? `<button type="button" data-action="delete-advocacy" data-id="${escapeHtml(c.id)}" class="absolute top-3 right-3 text-red-700 hover:bg-red-50 p-1 rounded">
+                          <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>`
+                      : ""
+                  }
+                  <div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                      <span class="text-[11px] font-bold px-2.5 py-0.5 rounded ${
+                        c.status === "Menang / Selesai" ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
+                      }">${escapeHtml(c.status)}</span>
+                      <span class="text-[11px] font-semibold text-gray-500">${escapeHtml(c.field)}</span>
+                    </div>
+                    <h3 class="font-extrabold text-base text-gray-600 mb-2 leading-snug">${escapeHtml(c.title)}</h3>
+                    <p class="text-xs md:text-sm text-gray-600 leading-relaxed mb-4">${escapeHtml(c.summary)}</p>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[11px] font-bold text-gray-600 mb-1">
+                      <span>Progres Pengawalan</span>
+                      <span>${c.progress}%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div style="width: ${Math.min(100, Math.max(0, c.progress))}%" class="h-full ${
+                  c.progress >= 100 ? "bg-emerald-700" : theme.primaryBg
+                }"></div>
+                    </div>
+                  </div>
+                </div>`
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+
+      // --- HALAMAN 5: KONTAK ---
+      const kontakHtml = `
+        <div class="py-14 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <h1 class="font-editorial text-3xl md:text-4xl font-extrabold text-gray-700">Kontak & Posko Pengaduan</h1>
+                ${renderAdminSectionBtn("contact_info", "Edit Kontak")}
+              </div>
+              <p class="text-gray-600 text-sm md:text-base leading-relaxed mb-6">
+                Hubungi sekretariat ${escapeHtml(state.siteConfig.orgName)} untuk kolaborasi diskusi, pengiriman naskah kajian, maupun permohonan pendampingan advokasi.
+              </p>
+
+              ${
+                admin && state.activeSectionEditor === "contact_info"
+                  ? `<form id="contact-info-form" class="bg-amber-50 border border-amber-400 rounded-xl p-5 space-y-3 text-sm">
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Email Resmi:</label>
+                        <input type="email" name="contactEmail" value="${escapeHtml(state.siteConfig.contactEmail)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Alamat Sekretariat:</label>
+                        <input type="text" name="contactAddress" value="${escapeHtml(state.siteConfig.contactAddress)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Instagram:</label>
+                          <input type="text" name="contactInstagram" value="${escapeHtml(state.siteConfig.contactInstagram)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Twitter / X:</label>
+                          <input type="text" name="contactTwitter" value="${escapeHtml(state.siteConfig.contactTwitter)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-amber-950 mb-1">Tautan Saluran WhatsApp:</label>
+                        <input type="url" name="contactWhatsappChannel" value="${escapeHtml(
+                          state.siteConfig.contactWhatsappChannel || ""
+                        )}" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+                      </div>
+                      <button type="submit" class="bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold inline-flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Info Kontak
+                      </button>
+                    </form>`
+                  : `<div class="space-y-4 text-sm">
+                      <div class="p-4 bg-white border border-gray-200 rounded-lg">
+                        <span class="text-xs font-bold uppercase text-gray-400 block">Email Redaksi & Advokasi</span>
+                        <span class="font-bold text-gray-600">${escapeHtml(state.siteConfig.contactEmail)}</span>
+                      </div>
+                      <div class="p-4 bg-white border border-gray-200 rounded-lg">
+                        <span class="text-xs font-bold uppercase text-gray-400 block">Sekretariat Kolektif</span>
+                        <span class="font-bold text-gray-600">${escapeHtml(state.siteConfig.contactAddress)}</span>
+                      </div>
+                      <div class="p-4 bg-white border border-gray-200 rounded-lg flex flex-wrap gap-6">
+                        <div>
+                          <span class="text-xs font-bold uppercase text-gray-400 block">Instagram</span>
+                          <span class="font-bold text-gray-600">${escapeHtml(state.siteConfig.contactInstagram)}</span>
+                        </div>
+                        <div>
+                          <span class="text-xs font-bold uppercase text-gray-400 block">Twitter / X</span>
+                          <span class="font-bold text-gray-600">${escapeHtml(state.siteConfig.contactTwitter)}</span>
+                        </div>
+                      </div>
+                      ${
+                        state.siteConfig.contactWhatsappChannel
+                          ? `<div class="p-4 bg-emerald-50/80 border border-emerald-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div>
+                                <span class="text-xs font-bold uppercase text-emerald-800 flex items-center gap-1.5 mb-1">
+                                  <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-700"></i> Saluran WhatsApp Resmi
+                                </span>
+                                <p class="font-bold text-gray-600 text-sm">Ikuti saluran Socialist Table di WhatsApp</p>
+                                <a href="${escapeHtml(
+                                  state.siteConfig.contactWhatsappChannel
+                                )}" target="_blank" rel="noopener noreferrer" class="text-xs text-emerald-800 hover:underline break-all block mt-0.5">
+                                  ${escapeHtml(state.siteConfig.contactWhatsappChannel)}
+                                </a>
+                              </div>
+                              <a href="${escapeHtml(
+                                state.siteConfig.contactWhatsappChannel
+                              )}" target="_blank" rel="noopener noreferrer"
+                                class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shrink-0">
+                                <i data-lucide="message-circle" class="w-4 h-4"></i> Ikuti Saluran WA <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                              </a>
+                            </div>`
+                          : ""
+                      }
+                    </div>`
+              }
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <h2 class="font-bold text-lg text-gray-600 mb-4">Kirim Pesan Langsung</h2>
+              ${
+                state.contactSubmitted
+                  ? `<div class="p-5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm space-y-2">
+                      <p class="font-bold flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> Pesan Anda telah diterima tim sekretariat.</p>
+                      <p>Kami akan segera menindaklanjuti melalui email yang Anda cantumkan.</p>
+                      <button type="button" data-action="reset-contact-form" class="text-xs font-bold underline mt-2">Kirim pesan lainnya</button>
+                    </div>`
+                  : `<form id="public-contact-form" class="space-y-4">
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nama / Organisasi</label>
+                        <input type="text" required value="${escapeHtml(state.currentUser?.name || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Nama lengkap Anda" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Email Kontak</label>
+                        <input type="email" required value="${escapeHtml(state.currentUser?.email || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="email@domain.com" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Keperluan</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+                          <option>Usulan Topik Diskusi</option>
+                          <option>Pengajuan Pendampingan Advokasi</option>
+                          <option>Kolaborasi Riset & Kajian</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Pesan</label>
+                        <textarea rows="4" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Tuliskan pesan atau kronologi singkat..."></textarea>
+                      </div>
+                      <button type="submit" class="w-full ${theme.primaryBg} ${theme.primaryHover} text-white font-bold py-2.5 rounded-lg text-sm">Kirim Pesan</button>
+                    </form>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+
+      let mainContent = berandaHtml;
+      if (state.activePage === "tentang") mainContent = tentangHtml;
+      else if (state.activePage === "fokus") mainContent = fokusHtml;
+      else if (state.activePage === "advokasi") mainContent = advokasiHtml;
+      else if (state.activePage === "kontak") mainContent = kontakHtml;
+
+      const footerHtml = `
+        <footer class="bg-gray-700 text-gray-400 py-12 px-4 sm:px-6 lg:px-8 border-t-4 border-red-800">
+          <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              ${renderBrandLogo(state.siteConfig, "footer", true)}
+              <p class="text-xs text-gray-400 mt-2.5 max-w-md">Ruang Diskusi & Advokasi Bidang Sosial, Politik, Hukum, dan Lingkungan.</p>
+              <div class="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-300 font-semibold">
+                <span class="inline-flex items-center gap-1.5 bg-gray-600 px-2.5 py-1 rounded border border-gray-500">
+                  <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-red-400"></i> ${state.siteVisits.toLocaleString("id-ID")} Kunjungan Situs
+                </span>
+                <span class="inline-flex items-center gap-1.5 bg-gray-600 px-2.5 py-1 rounded border border-gray-500">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-400"></i> ${totalReads.toLocaleString("id-ID")} Total Pembaca Kajian
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-4 text-xs font-semibold items-center">
+              <button type="button" data-action="nav" data-page="beranda" class="hover:text-white">Beranda</button>
+              <button type="button" data-action="nav" data-page="tentang" class="hover:text-white">Tentang Kami</button>
+              <button type="button" data-action="nav" data-page="fokus" class="hover:text-white">Fokus Kajian</button>
+              <button type="button" data-action="nav" data-page="advokasi" class="hover:text-white">Ruang Advokasi</button>
+              ${
+                state.siteConfig.contactWhatsappChannel
+                  ? `<a href="${escapeHtml(
+                      state.siteConfig.contactWhatsappChannel
+                    )}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1">
+                      <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Saluran WhatsApp
+                    </a>`
+                  : ""
+              }
+              ${
+                admin
+                  ? `<button type="button" data-action="open-upload" class="text-amber-400 hover:text-amber-300">+ Upload Kajian & Tulisan</button>`
+                  : `<button type="button" data-action="open-auth" data-tab="login" class="text-gray-300 hover:text-white inline-flex items-center gap-1">
+                      <i data-lucide="lock" class="w-3 h-3"></i> Masuk Pengelola
+                    </button>`
+              }
+            </div>
+          </div>
+        </footer>
+      `;
+
+      // --- MODALS ---
+      const authModalHtml = state.isAuthModalOpen
+        ? `<div class="fixed inset-0 z-[70] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-gray-200">
+              <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="shield" class="w-4 h-4 text-red-500"></i>
+                  <h2 class="font-bold text-base">${state.authTab === "login" ? "Masuk ke Portal Socialist Table" : "Buat Akun Anggota Baru"}</h2>
+                </div>
+                <button type="button" data-action="close-auth" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+              </div>
+              <div class="grid grid-cols-2 border-b border-gray-200 bg-gray-50 text-xs font-bold">
+                <button type="button" data-action="switch-auth-tab" data-tab="login" class="py-3 text-center ${
+                  state.authTab === "login" ? "bg-white text-gray-700 border-b-2 border-red-800" : "text-gray-500"
+                }">Masuk (Login)</button>
+                <button type="button" data-action="switch-auth-tab" data-tab="register" class="py-3 text-center ${
+                  state.authTab === "register" ? "bg-white text-gray-700 border-b-2 border-red-800" : "text-gray-500"
+                }">Buat Akun (Daftar)</button>
+              </div>
+              ${
+                state.registrationNotice
+                  ? `<div class="p-6 space-y-4 text-sm">
+                      <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 space-y-2">
+                        <div class="flex items-center gap-2 font-extrabold text-emerald-900">
+                          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-700 shrink-0"></i>
+                          <span>Pendaftaran Akun Berhasil!</span>
+                        </div>
+                        <p class="text-xs leading-relaxed">
+                          Halo <strong>${escapeHtml(state.registrationNotice.name)}</strong>, ${state.registrationNotice.needsConfirm ? "pendaftaran berhasil. Buka email Anda dan klik tautan verifikasi sebelum masuk. Email dikirim ke" : "akun Anda telah aktif. Pemberitahuan pendaftaran dikirim ke"} <strong>${escapeHtml(
+                      state.registrationNotice.email
+                    )}</strong> dari email resmi Socialist Table:
+                        </p>
+                        <div class="bg-white border border-emerald-200 rounded-lg px-3 py-2 flex items-center gap-2 text-xs font-bold text-gray-600">
+                          <i data-lucide="mail" class="w-4 h-4 text-red-800 shrink-0"></i>
+                          <span>socialisttable@gmail.com</span>
+                        </div>
+                      </div>
+                      <button type="button" data-action="close-auth" class="w-full ${theme.primaryBg} text-white font-bold py-2.5 rounded-lg text-sm">Lanjutkan Menjelajahi Website</button>
+                    </div>`
+                  : `<form id="auth-form" class="p-6 space-y-4 text-sm">
+                      ${
+                        state.authError
+                          ? `<div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2">
+                              <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+                              <span>${escapeHtml(state.authError)}</span>
+                            </div>`
+                          : ""
+                      }
+                      ${
+                        state.authTab === "login"
+                          ? `<div>
+                              <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Username atau Email</label>
+                              <input type="email" name="identifier" required autocomplete="username" placeholder="Masukkan email" class="w-full border border-gray-300 rounded-lg px-3 py-2.5" />
+                            </div>`
+                          : `<div>
+                              <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Username / Nama Lengkap</label>
+                              <input type="text" name="name" required placeholder="Contoh: ahmad fauzi" class="w-full border border-gray-300 rounded-lg px-3 py-2.5" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Alamat Email Aktif</label>
+                              <input type="email" name="email" required placeholder="nama@email.com" class="w-full border border-gray-300 rounded-lg px-3 py-2.5" />
+                            </div>`
+                      }
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Kata Sandi</label>
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full border border-gray-300 rounded-lg px-3 py-2.5" />
+                      </div>
+                      ${
+                        state.authTab === "register"
+                          ? `<div class="p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 flex items-start gap-2.5">
+                              <i data-lucide="mail" class="w-4 h-4 ${theme.primaryText} shrink-0 mt-0.5"></i>
+                              <p class="leading-relaxed">Setelah mendaftar, Anda akan menerima email pemberitahuan dari <strong>Socialist Table</strong> melalui alamat <span class="font-bold text-gray-600">socialisttable@gmail.com</span>.</p>
+                            </div>`
+                          : ""
+                      }
+                      <button type="submit" class="w-full ${theme.primaryBg} ${theme.primaryHover} text-white font-bold py-2.5 rounded-lg text-sm">
+                        ${state.authTab === "login" ? "Masuk Sekarang" : "Daftarkan Akun"}
+                      </button>
+                    </form>`
+              }
+            </div>
+          </div>`
+        : "";
+
+      const customizerDrawerHtml =
+        admin && state.isCustomizerOpen
+          ? `<div class="fixed inset-y-0 right-0 w-full max-w-sm bg-white border-l border-gray-200 shadow-2xl z-[60] flex flex-col">
+              <div class="p-4 bg-gray-600 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                  <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+                  <span>Edit Tampilan Global (Admin)</span>
+                </div>
+                <button type="button" data-action="toggle-customizer" class="p-1 hover:bg-gray-700 rounded"><i data-lucide="x" class="w-5 h-5"></i></button>
+              </div>
+              <form id="customizer-form" class="p-5 overflow-y-auto flex-1 space-y-6 text-sm">
+                <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center justify-between gap-3">
+                  <div>
+                    <span class="text-xs font-extrabold text-amber-950 block">Logo & Identitas Visual</span>
+                    <span class="text-[11px] text-amber-800">Unggah gambar logo atau pilih ikon</span>
+                  </div>
+                  <button type="button" data-action="open-logo-editor" class="px-3 py-2 rounded-lg bg-gray-600 text-amber-300 text-xs font-bold">Edit Logo</button>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase text-gray-500 mb-1.5">Nama Organisasi</label>
+                  <input type="text" name="orgName" value="${escapeHtml(state.siteConfig.orgName)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 font-semibold" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Warna Aksen Utama</label>
+                  <div class="space-y-2">
+                    ${Object.entries(ACCENT_THEMES)
+                      .map(
+                        ([key, val]) => `
+                        <button type="button" data-action="set-accent" data-key="${key}"
+                          class="w-full flex items-center justify-between px-3 py-2 rounded-lg border text-left text-xs font-bold ${
+                            state.siteConfig.accentKey === key ? "border-gray-600 bg-gray-100" : "border-gray-200 hover:bg-gray-50"
+                          }">
+                          <span class="flex items-center gap-2.5">
+                            <span style="background-color: ${val.hex}" class="w-4 h-4 rounded-full inline-block"></span>
+                            ${val.name}
+                          </span>
+                          ${state.siteConfig.accentKey === key ? `<i data-lucide="check" class="w-4 h-4"></i>` : ""}
+                        </button>`
+                      )
+                      .join("")}
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Tata Letak Kartu</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button type="button" data-action="set-layout" data-val="grid" class="py-2 px-3 rounded-lg border text-xs font-bold ${
+                      state.siteConfig.layoutMode === "grid" ? "bg-gray-600 text-white border-gray-600" : "border-gray-300"
+                    }">Grid Kartu</button>
+                    <button type="button" data-action="set-layout" data-val="list" class="py-2 px-3 rounded-lg border text-xs font-bold ${
+                      state.siteConfig.layoutMode === "list" ? "bg-gray-600 text-white border-gray-600" : "border-gray-300"
+                    }">Daftar Editorial</button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Ukuran Teks Bacaan</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button type="button" data-action="set-fontsize" data-val="normal" class="py-2 px-3 rounded-lg border text-xs font-bold ${
+                      state.siteConfig.fontSize === "normal" ? "bg-gray-600 text-white border-gray-600" : "border-gray-300"
+                    }">Standar</button>
+                    <button type="button" data-action="set-fontsize" data-val="large" class="py-2 px-3 rounded-lg border text-xs font-bold ${
+                      state.siteConfig.fontSize === "large" ? "bg-gray-600 text-white border-gray-600" : "border-gray-300"
+                    }">Besar (Nyaman Baca)</button>
+                  </div>
+                </div>
+                <div class="pt-3 border-t border-gray-200 flex items-center gap-2">
+                  <button type="submit" class="flex-1 ${theme.primaryBg} text-white py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan ke Cloud
+                  </button>
+                  <button type="button" data-action="reset-config" class="px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-xs font-bold">Reset</button>
+                </div>
+              </form>
+            </div>`
+          : "";
+
+      const logoModalHtml =
+        admin && state.isLogoEditorOpen && state.logoDraft
+          ? `<div class="fixed inset-0 z-[75] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
+                    <h2 class="font-bold text-base">Editor Logo Organisasi (Khusus Admin)</h2>
+                  </div>
+                  <button type="button" data-action="close-logo-editor" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <form id="logo-editor-form" class="p-6 space-y-5 max-h-[82vh] overflow-y-auto text-sm">
+                  <div class="bg-gray-100 border border-gray-200 rounded-xl p-4">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 block mb-3">Pratinjau Tampilan Logo:</span>
+                    <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
+                      ${renderBrandLogo(state.logoDraft, "header", false)}
+                      <span class="text-[11px] text-gray-400 font-semibold">Live Preview</span>
+                    </div>
+                  </div>
+                  ${
+                    state.logoUploadError
+                      ? `<div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs font-semibold">${escapeHtml(
+                          state.logoUploadError
+                        )}</div>`
+                      : ""
+                  }
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-2">Pilih Jenis Sumber Logo</label>
+                    <div class="grid grid-cols-3 gap-2">
+                      ${[
+                        { id: "upload", label: "Unggah File" },
+                        { id: "url", label: "Tautan URL" },
+                        { id: "icon", label: "Ikon Bawaan" }
+                      ]
+                        .map(
+                          (t) => `<button type="button" data-action="set-logo-type" data-val="${t.id}"
+                            class="py-2.5 px-3 rounded-lg border text-xs font-bold ${
+                              state.logoDraft.logoType === t.id ? "bg-gray-600 text-white border-gray-600" : "bg-white text-gray-700 border-gray-300"
+                            }">${t.label}</button>`
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                  ${
+                    state.logoDraft.logoType === "upload"
+                      ? `<div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
+                          <label class="block text-xs font-bold text-gray-500">Unggah File Logo (PNG, JPG, SVG, WEBP)</label>
+                          <input type="file" id="logo-file-input" accept=".png,.jpg,.jpeg,.svg,.webp,image/*" class="text-xs w-full" />
+                        </div>`
+                      : ""
+                  }
+                  ${
+                    state.logoDraft.logoType === "url"
+                      ? `<div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+                          <label class="block text-xs font-bold text-gray-500">Masukkan URL Gambar Logo</label>
+                          <input type="url" name="logoImageUrl" value="${escapeHtml(
+                            state.logoDraft.logoImageUrl
+                          )}" placeholder="https://contoh.com/logo.png" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs bg-white" />
+                        </div>`
+                      : ""
+                  }
+                  ${
+                    state.logoDraft.logoType === "icon"
+                      ? `<div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
+                          <label class="block text-xs font-bold text-gray-500">Pilih Ikon Tematik</label>
+                          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            ${LOGO_ICON_OPTIONS.map(
+                              (opt) => `<button type="button" data-action="set-logo-icon" data-val="${opt.id}"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${
+                                  state.logoDraft.logoIconId === opt.id ? "bg-gray-600 text-white border-gray-600" : "bg-white text-gray-700 border-gray-300"
+                                }">
+                                ${opt.icon ? `<i data-lucide="${opt.icon}" class="w-3.5 h-3.5"></i>` : `<span class="font-black text-xs">ST</span>`}
+                                <span class="truncate">${opt.label}</span>
+                              </button>`
+                            ).join("")}
+                          </div>
+                        </div>`
+                      : ""
+                  }
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Bentuk Bingkai Logo</label>
+                      <select name="logoShape" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs bg-white font-semibold">
+                        <option value="rounded" ${state.logoDraft.logoShape === "rounded" ? "selected" : ""}>Kotak Membulat</option>
+                        <option value="circle" ${state.logoDraft.logoShape === "circle" ? "selected" : ""}>Lingkaran Penuh</option>
+                        <option value="frameless" ${state.logoDraft.logoShape === "frameless" ? "selected" : ""}>Tanpa Bingkai</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Subjudul Organisasi</label>
+                      <input type="text" name="orgSubtitle" value="${escapeHtml(state.logoDraft.orgSubtitle)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                    </div>
+                  </div>
+                  <div class="pt-2 flex justify-end gap-2 border-t border-gray-200">
+                    <button type="button" data-action="close-logo-editor" class="px-4 py-2 rounded-lg border border-gray-300 text-xs font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg ${theme.primaryBg} text-white text-xs font-bold">Simpan Logo</button>
+                  </div>
+                </form>
+              </div>
+            </div>`
+          : "";
+
+      const uploadModalHtml =
+        admin && state.isUploadModalOpen
+          ? `<div class="fixed inset-0 z-[65] bg-gray-700/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-red-500"></i>
+                    <h2 class="font-bold text-base md:text-lg">Upload Kajian & Tulisan Baru (Admin)</h2>
+                  </div>
+                  <button type="button" data-action="close-upload" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <form id="upload-pub-form" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-sm">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Jenis Publikasi</label>
+                      <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                        <option value="opinion">Tulisan / Opini</option>
+                        <option value="report">Kajian / Laporan Advokasi</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Bidang Kajian</label>
+                      <select name="category" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                        <option value="sosial" ${state.uploadForm.category === "sosial" ? "selected" : ""}>Bidang Sosial</option>
+                        <option value="politik" ${state.uploadForm.category === "politik" ? "selected" : ""}>Bidang Politik</option>
+                        <option value="hukum" ${state.uploadForm.category === "hukum" ? "selected" : ""}>Bidang Hukum</option>
+                        <option value="lingkungan" ${state.uploadForm.category === "lingkungan" ? "selected" : ""}>Bidang Lingkungan</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Judul Tulisan / Kajian *</label>
+                    <input type="text" name="title" required placeholder="Masukkan judul lengkap..." class="w-full border border-gray-300 rounded-lg px-3 py-2 font-semibold" />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Penulis / Tim Penyusun *</label>
+                      <input type="text" name="author" required placeholder="Nama penulis atau divisi" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Tanggal Terbit</label>
+                      <input type="text" name="date" value="${escapeHtml(state.uploadForm.date)}" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Ringkasan Singkat (Excerpt)</label>
+                    <textarea name="excerpt" rows="2" placeholder="Ringkasan 1-2 kalimat..." class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Isi Lengkap Tulisan / Kajian *</label>
+                    <textarea name="content" rows="6" required placeholder="Tuliskan isi lengkap artikel atau laporan kajian..." class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                  </div>
+                  <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+                    <label class="block text-xs font-bold uppercase text-gray-500">Tautan Dokumen Lampiran (MEGA / Google Drive)</label>
+                    <input type="url" name="docUrl" placeholder="https://mega.nz/file/... atau https://docs.google.com/..." class="w-full border border-gray-300 rounded px-3 py-2 text-xs bg-white" />
+                  </div>
+                  <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" data-action="close-upload" class="px-4 py-2.5 rounded-lg border border-gray-300 text-xs font-bold">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-lg ${theme.primaryBg} text-white text-xs font-bold shadow">Publikasikan Sekarang</button>
+                  </div>
+                </form>
+              </div>
+            </div>`
+          : "";
+
+      const editPubModalHtml =
+        admin && state.editingPubItem
+          ? `<div class="fixed inset-0 z-[70] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i>
+                    <h2 class="font-bold text-base">Edit Tulisan / Kajian (Khusus Admin)</h2>
+                  </div>
+                  <button type="button" data-action="close-edit-pub" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <form id="edit-pub-form" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-sm">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Jenis Publikasi</label>
+                      <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                        <option value="opinion" ${state.editingPubItem.type === "opinion" ? "selected" : ""}>Tulisan / Opini</option>
+                        <option value="report" ${state.editingPubItem.type === "report" ? "selected" : ""}>Kajian / Laporan Advokasi</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Bidang Kajian</label>
+                      <select name="category" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                        <option value="sosial" ${state.editingPubItem.category === "sosial" ? "selected" : ""}>Bidang Sosial</option>
+                        <option value="politik" ${state.editingPubItem.category === "politik" ? "selected" : ""}>Bidang Politik</option>
+                        <option value="hukum" ${state.editingPubItem.category === "hukum" ? "selected" : ""}>Bidang Hukum</option>
+                        <option value="lingkungan" ${state.editingPubItem.category === "lingkungan" ? "selected" : ""}>Bidang Lingkungan</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Judul</label>
+                    <input type="text" name="title" required value="${escapeHtml(state.editingPubItem.title)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 font-semibold" />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Penulis</label>
+                      <input type="text" name="author" required value="${escapeHtml(state.editingPubItem.author)}" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Tanggal</label>
+                      <input type="text" name="date" value="${escapeHtml(state.editingPubItem.date)}" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Ringkasan</label>
+                    <textarea name="excerpt" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2">${escapeHtml(
+                      state.editingPubItem.excerpt
+                    )}</textarea>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Isi Lengkap</label>
+                    <textarea name="content" rows="6" required class="w-full border border-gray-300 rounded-lg px-3 py-2">${escapeHtml(
+                      state.editingPubItem.content
+                    )}</textarea>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Tautan Dokumen Lampiran</label>
+                    <input type="text" name="docUrl" value="${escapeHtml(state.editingPubItem.docUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                  </div>
+                  <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" data-action="close-edit-pub" class="px-4 py-2 rounded-lg border border-gray-300 text-xs font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold">Simpan Perubahan</button>
+                  </div>
+                </form>
+              </div>
+            </div>`
+          : "";
+
+      const megaModalHtml =
+        admin && state.isMegaManagerOpen
+          ? `<div class="fixed inset-0 z-[75] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="folder-open" class="w-5 h-5 text-red-500"></i>
+                    <h2 class="font-bold text-base">Penyimpanan & Folder MEGA (Socialist Table)</h2>
+                  </div>
+                  <button type="button" data-action="close-mega-manager" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-6 space-y-5 max-h-[82vh] overflow-y-auto text-sm">
+                  <div class="p-4 rounded-xl bg-red-50 border border-red-200 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <span class="text-xs font-extrabold uppercase text-red-900 block">Struktur Folder Siap Upload ke MEGA</span>
+                        <p class="text-xs text-red-900 mt-1">Buat folder utama <strong>Arsip_Mega_Socialist_Table</strong> di MEGA Anda dengan sub-folder berikut:</p>
+                      </div>
+                      <a href="https://mega.nz/" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-red-800 text-white text-xs font-bold shrink-0">Buka MEGA</a>
+                    </div>
+                    <div class="bg-white border border-red-200 rounded-lg p-3 font-mono text-xs text-gray-500 space-y-1">
+                      <div class="font-bold text-red-900">📁 Arsip_Mega_Socialist_Table/</div>
+                      <div class="pl-4">├── 📂 01_Bidang_Sosial/</div>
+                      <div class="pl-4">├── 📂 02_Bidang_Politik/</div>
+                      <div class="pl-4">├── 📂 03_Bidang_Hukum/</div>
+                      <div class="pl-4">└── 📂 04_Bidang_Lingkungan/</div>
+                    </div>
+                    <button type="button" data-action="download-mega-package" class="w-full py-2.5 px-4 rounded-lg bg-gray-600 text-white text-xs font-bold">
+                      Unduh Paket "Arsip_Mega_Socialist_Table.json"
+                    </button>
+                  </div>
+                  <form id="mega-links-form" class="space-y-3">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Tautan Folder Utama MEGA</label>
+                      <input type="url" name="megaRootFolderUrl" value="${escapeHtml(state.siteConfig.megaRootFolderUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Folder MEGA Sosial</label>
+                        <input type="url" name="megaFolderSosialUrl" value="${escapeHtml(state.siteConfig.megaFolderSosialUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Folder MEGA Politik</label>
+                        <input type="url" name="megaFolderPolitikUrl" value="${escapeHtml(state.siteConfig.megaFolderPolitikUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Folder MEGA Hukum</label>
+                        <input type="url" name="megaFolderHukumUrl" value="${escapeHtml(state.siteConfig.megaFolderHukumUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Folder MEGA Lingkungan</label>
+                        <input type="url" name="megaFolderLingkunganUrl" value="${escapeHtml(state.siteConfig.megaFolderLingkunganUrl || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs" />
+                      </div>
+                    </div>
+                    <div class="pt-2 flex justify-end gap-2">
+                      <button type="button" data-action="close-mega-manager" class="px-4 py-2 rounded-lg border border-gray-300 text-xs font-bold">Tutup</button>
+                      <button type="submit" class="px-5 py-2 rounded-lg ${theme.primaryBg} text-white text-xs font-bold">Simpan Tautan MEGA</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>`
+          : "";
+
+      const backupModalHtml =
+        admin && state.isExportModalOpen
+          ? `<div class="fixed inset-0 z-[75] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <h2 class="font-bold text-base">Cadangkan & Pulihkan Seluruh Isi Website</h2>
+                  <button type="button" data-action="close-backup" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-6 space-y-4 text-sm">
+                  <textarea id="backup-json-textarea" rows="10" class="w-full font-mono text-[11px] border border-gray-300 rounded-lg p-3 bg-gray-50">${escapeHtml(
+                    state.exportedCodeText
+                  )}</textarea>
+                  <div class="flex flex-wrap justify-between gap-2">
+                    <button type="button" data-action="copy-backup" class="px-4 py-2 rounded-lg bg-gray-600 text-white text-xs font-bold">Salin Data Cadangan</button>
+                    <button type="button" data-action="import-backup" class="px-5 py-2 rounded-lg ${theme.primaryBg} text-white text-xs font-bold">Terapkan & Simpan ke Website</button>
+                  </div>
+                </div>
+              </div>
+            </div>`
+          : "";
+
+      const readerModalHtml = readingItem
+        ? `<div class="fixed inset-0 z-[65] bg-gray-700/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+              <div class="bg-gradient-to-br ${escapeHtml(readingItem.coverGradient)} p-6 md:p-8 text-white relative">
+                ${
+                  readingItem.customCover
+                    ? `<img src="${escapeHtml(readingItem.customCover)}" alt="${escapeHtml(readingItem.title)}" class="absolute inset-0 w-full h-full object-cover opacity-40" />`
+                    : ""
+                }
+                <div class="relative z-10 flex justify-between items-start gap-4">
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                      <span class="inline-block text-xs font-bold uppercase tracking-wider px-3 py-1 rounded bg-gray-700/60">
+                        ${readingItem.type === "report" ? "Laporan Kajian Advokasi" : "Tulisan & Opini"} • ${escapeHtml(
+                          state.categoryMeta[readingItem.category]?.label || ""
+                        )}
+                      </span>
+                      <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded bg-amber-400 text-gray-700">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i> ${(readingItem.views || 0).toLocaleString("id-ID")} kali dibaca
+                      </span>
+                    </div>
+                    <h2 class="font-editorial text-2xl md:text-3xl font-extrabold leading-snug">${escapeHtml(readingItem.title)}</h2>
+                    <p class="text-xs md:text-sm text-gray-200 mt-3">Oleh <strong>${escapeHtml(readingItem.author)}</strong> • Diterbitkan ${escapeHtml(
+                      readingItem.date
+                    )}</p>
+                  </div>
+                  <button type="button" data-action="close-reader" class="p-2 rounded-full bg-gray-700/50 hover:bg-gray-700 text-white shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="p-6 md:p-8 max-h-[65vh] overflow-y-auto space-y-4 text-gray-500 leading-relaxed whitespace-pre-line text-sm md:text-base">${escapeHtml(
+                readingItem.content
+              )}</div>
+              <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                ${
+                  readingItem.docUrl
+                    ? `<a href="${escapeHtml(readingItem.docUrl)}" target="_blank" rel="noopener noreferrer"
+                        data-action="inc-download-view" data-id="${escapeHtml(readingItem.id)}"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg ${theme.primaryBg} text-white text-xs font-bold">
+                        <i data-lucide="external-link" class="w-4 h-4"></i> Buka / Unduh Dokumen Lampiran
+                      </a>`
+                    : `<span class="text-xs text-gray-500">Arsip Digital ${escapeHtml(state.siteConfig.orgName)}</span>`
+                }
+                <button type="button" data-action="close-reader" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-xs font-bold text-gray-500">Tutup Bacaan</button>
+              </div>
+            </div>
+          </div>`
+        : "";
+
+      const statusBadge = (st) =>
+        st === "approved"
+          ? `<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Disetujui</span>`
+          : st === "rejected"
+          ? `<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800">Ditolak</span>`
+          : `<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">Menunggu persetujuan</span>`;
+      const typeLabel = (t) => (t === "report" ? "Kajian / Laporan" : "Tulisan / Opini");
+
+      const mySubs = state.submissions.filter((x) => x.userId === state.authUser?.id);
+      const sd = state.submitDraft || {};
+      const sdCat = sd.category || state.uploadForm.category;
+      const submitModalHtml =
+        !admin && state.isSubmitModalOpen && state.authUser
+          ? `<div class="fixed inset-0 z-[65] bg-gray-700/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="send" class="w-5 h-5 text-amber-400"></i>
+                    <h2 class="font-bold text-base md:text-lg">Ajukan Tulisan / Kajian</h2>
+                  </div>
+                  <button type="button" data-action="close-submit" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto text-sm">
+                  <p class="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    Tulisan Anda akan ditinjau oleh admin sebelum tayang di halaman Fokus Kajian. Anda bisa memantau statusnya di bagian bawah formulir ini.
+                  </p>
+                  <form id="submit-article-form" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Jenis</label>
+                        <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                          <option value="opinion" ${sd.type !== "report" ? "selected" : ""}>Tulisan / Opini</option>
+                          <option value="report" ${sd.type === "report" ? "selected" : ""}>Kajian / Laporan Advokasi</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Bidang Kajian</label>
+                        <select name="category" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                          <option value="sosial" ${sdCat === "sosial" ? "selected" : ""}>Bidang Sosial</option>
+                          <option value="politik" ${sdCat === "politik" ? "selected" : ""}>Bidang Politik</option>
+                          <option value="hukum" ${sdCat === "hukum" ? "selected" : ""}>Bidang Hukum</option>
+                          <option value="lingkungan" ${sdCat === "lingkungan" ? "selected" : ""}>Bidang Lingkungan</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Judul *</label>
+                      <input type="text" name="title" required maxlength="200" value="${escapeHtml(sd.title || "")}" placeholder="Judul lengkap tulisan..." class="w-full border border-gray-300 rounded-lg px-3 py-2 font-semibold" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nama Penulis *</label>
+                      <input type="text" name="author" required maxlength="120" value="${escapeHtml(sd.author !== undefined ? sd.author : state.currentUser?.name || "")}" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Ringkasan Singkat</label>
+                      <textarea name="excerpt" rows="2" maxlength="400" placeholder="Ringkasan 1-2 kalimat (opsional)" class="w-full border border-gray-300 rounded-lg px-3 py-2">${escapeHtml(sd.excerpt || "")}</textarea>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Isi Lengkap *</label>
+                      <textarea name="content" rows="8" required maxlength="50000" placeholder="Tuliskan isi lengkap artikel atau laporan kajian..." class="w-full border border-gray-300 rounded-lg px-3 py-2">${escapeHtml(sd.content || "")}</textarea>
+                    </div>
+                    <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+                      <label class="block text-xs font-bold uppercase text-gray-500">Tautan Dokumen Lampiran (opsional, https://...)</label>
+                      <input type="url" name="docUrl" value="${escapeHtml(sd.docUrl || "")}" placeholder="https://drive.google.com/... atau https://mega.nz/..." class="w-full border border-gray-300 rounded px-3 py-2 text-xs bg-white" />
+                    </div>
+                    <div class="pt-1 flex justify-end gap-3">
+                      <button type="button" data-action="close-submit" class="px-4 py-2.5 rounded-lg border border-gray-300 text-xs font-bold">Tutup</button>
+                      <button type="submit" class="px-6 py-2.5 rounded-lg ${theme.primaryBg} text-white text-xs font-bold shadow">Kirim untuk Ditinjau</button>
+                    </div>
+                  </form>
+                  <div class="border-t border-gray-200 pt-4">
+                    <h3 class="text-xs font-bold uppercase text-gray-500 mb-2">Pengajuan Anda (${mySubs.length})</h3>
+                    ${
+                      mySubs.length === 0
+                        ? `<p class="text-xs text-gray-400">Belum ada pengajuan.</p>`
+                        : `<div class="space-y-2">${mySubs
+                            .map(
+                              (x) => `<div class="flex items-center justify-between gap-3 border border-gray-200 rounded-lg p-3">
+                                <div class="min-w-0">
+                                  <p class="font-bold text-gray-700 truncate">${escapeHtml(x.title)}</p>
+                                  <p class="text-[11px] text-gray-500">${escapeHtml(typeLabel(x.type))} • ${escapeHtml(state.categoryMeta[x.category]?.label || x.category)}</p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                  ${statusBadge(x.status)}
+                                  ${
+                                    x.status === "pending"
+                                      ? `<button type="button" data-action="delete-submission" data-id="${escapeHtml(x.id)}" class="text-[11px] font-bold px-2 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200">Tarik</button>`
+                                      : ""
+                                  }
+                                </div>
+                              </div>`
+                            )
+                            .join("")}</div>`
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>`
+          : "";
+
+      const pendingSubs = state.submissions.filter((x) => x.status === "pending");
+      const doneSubs = state.submissions.filter((x) => x.status !== "pending");
+      const reviewModalHtml =
+        admin && state.isReviewModalOpen
+          ? `<div class="fixed inset-0 z-[66] bg-gray-700/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+              <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden my-8 border border-gray-200">
+                <div class="bg-gray-700 text-white px-6 py-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="inbox" class="w-5 h-5 text-amber-400"></i>
+                    <h2 class="font-bold text-base md:text-lg">Tulisan Masuk dari Anggota</h2>
+                  </div>
+                  <button type="button" data-action="close-review" class="p-1 hover:bg-gray-700 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto text-sm">
+                  <h3 class="text-xs font-bold uppercase text-gray-500">Menunggu persetujuan (${pendingSubs.length})</h3>
+                  ${
+                    pendingSubs.length === 0
+                      ? `<p class="text-xs text-gray-400">Tidak ada tulisan yang menunggu persetujuan.</p>`
+                      : pendingSubs
+                          .map((x) => {
+                            if (x.id === state.editingSubmissionId) {
+                              const d = state.reviewDraft || {};
+                              return `<form id="edit-submission-form" class="border-2 border-amber-300 bg-amber-50/40 rounded-xl p-4 space-y-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-200 text-amber-900">Mode Sunting</span>
+                                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">${escapeHtml(typeLabel(x.type))}</span>
+                                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">${escapeHtml(state.categoryMeta[x.category]?.label || x.category)}</span>
+                                </div>
+                                <p class="text-xs text-gray-500">Penulis: <strong>${escapeHtml(x.author)}</strong> (nama penulis dan bidang tidak dapat diubah)</p>
+                                <div>
+                                  <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Judul *</label>
+                                  <input type="text" name="title" required maxlength="200" value="${escapeHtml(d.title !== undefined ? d.title : x.title)}" class="w-full border border-gray-300 rounded-lg px-3 py-2 font-semibold bg-white" />
+                                </div>
+                                <div>
+                                  <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Uraian Ringkas</label>
+                                  <textarea name="excerpt" rows="3" maxlength="400" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">${escapeHtml(d.excerpt !== undefined ? d.excerpt : x.excerpt || "")}</textarea>
+                                </div>
+                                <div>
+                                  <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Uraian Keseluruhan *</label>
+                                  <textarea name="content" rows="12" required maxlength="50000" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">${escapeHtml(d.content !== undefined ? d.content : x.content)}</textarea>
+                                </div>
+                                <div class="flex flex-wrap gap-2 pt-1">
+                                  <button type="submit" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-xs font-bold hover:bg-gray-600">Simpan Perubahan</button>
+                                  <button type="button" data-action="save-publish-submission" class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-600">Simpan &amp; Terbitkan</button>
+                                  <button type="button" data-action="cancel-edit-submission" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-xs font-bold text-gray-600">Batal</button>
+                                </div>
+                              </form>`;
+                            }
+                            const link = safeHttpUrl(x.docUrl);
+                            return `<div class="border border-gray-200 rounded-xl p-4 space-y-2">
+                              <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">${escapeHtml(typeLabel(x.type))}</span>
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">${escapeHtml(state.categoryMeta[x.category]?.label || x.category)}</span>
+                              </div>
+                              <h4 class="font-extrabold text-gray-700 text-base">${escapeHtml(x.title)}</h4>
+                              <p class="text-xs text-gray-500">Penulis: ${escapeHtml(x.author)} • Pengirim: ${escapeHtml(x.submitterName || "-")} (${escapeHtml(x.submitterEmail || "-")})</p>
+                              ${x.excerpt ? `<p class="text-xs text-gray-600 italic">${escapeHtml(x.excerpt)}</p>` : ""}
+                              <details class="text-xs">
+                                <summary class="cursor-pointer font-bold text-gray-600">Lihat isi lengkap</summary>
+                                <div class="mt-2 p-3 bg-gray-50 rounded-lg whitespace-pre-wrap max-h-72 overflow-y-auto">${escapeHtml(x.content)}</div>
+                              </details>
+                              ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-red-800 underline break-all">Buka lampiran</a>` : ""}
+                              <div class="flex flex-wrap gap-2 pt-1">
+                                <button type="button" data-action="approve-submission" data-id="${escapeHtml(x.id)}" class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-600">Setujui &amp; Terbitkan</button>
+                                <button type="button" data-action="edit-submission" data-id="${escapeHtml(x.id)}" class="px-4 py-2 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold hover:bg-amber-200">Edit</button>
+                                <button type="button" data-action="reject-submission" data-id="${escapeHtml(x.id)}" class="px-4 py-2 rounded-lg bg-red-100 text-red-800 text-xs font-bold hover:bg-red-200">Tolak</button>
+                              </div>
+                            </div>`;
+                          })
+                          .join("")
+                  }
+                  ${
+                    doneSubs.length
+                      ? `<h3 class="text-xs font-bold uppercase text-gray-500 pt-2">Riwayat (${doneSubs.length})</h3>
+                        <div class="space-y-2">${doneSubs
+                          .map(
+                            (x) => `<div class="flex items-center justify-between gap-3 border border-gray-200 rounded-lg p-3">
+                              <div class="min-w-0">
+                                <p class="font-bold text-gray-700 truncate">${escapeHtml(x.title)}</p>
+                                <p class="text-[11px] text-gray-500">${escapeHtml(x.author)} • ${escapeHtml(x.submitterEmail || "")}</p>
+                              </div>
+                              <div class="flex items-center gap-2 shrink-0">
+                                ${statusBadge(x.status)}
+                                <button type="button" data-action="delete-submission" data-id="${escapeHtml(x.id)}" class="text-[11px] font-bold px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Hapus</button>
+                              </div>
+                            </div>`
+                          )
+                          .join("")}</div>`
+                      : ""
+                  }
+                </div>
+              </div>
+            </div>`
+          : "";
+
+      document.getElementById("app").innerHTML = `
+        <div id="toast-root">${toastHtml}</div>
+        ${adminBarHtml}
+        ${navbarHtml}
+        <main class="flex-1">${mainContent}</main>
+        ${footerHtml}
+        ${authModalHtml}
+        ${customizerDrawerHtml}
+        ${logoModalHtml}
+        ${uploadModalHtml}
+        ${submitModalHtml}
+        ${reviewModalHtml}
+        ${editPubModalHtml}
+        ${megaModalHtml}
+        ${backupModalHtml}
+        ${readerModalHtml}
+      `;
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    // --- EVENT DELEGATION (KLIK & SUBMIT FORM) ---
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === "nav") {
+        state.activePage = btn.dataset.page;
+        state.isMobileMenuOpen = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        render();
+      } else if (action === "open-category") {
+        state.selectedCategory = btn.dataset.cat;
+        state.activePage = "fokus";
+        state.isMobileMenuOpen = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        render();
+      } else if (action === "toggle-mobile-menu") {
+        state.isMobileMenuOpen = !state.isMobileMenuOpen;
+        render();
+      } else if (action === "toggle-section-editor") {
+        const sec = btn.dataset.section;
+        state.activeSectionEditor = state.activeSectionEditor === sec ? null : sec;
+        render();
+      } else if (action === "open-auth") {
+        state.authTab = btn.dataset.tab || "login";
+        state.authError = "";
+        state.registrationNotice = null;
+        state.isAuthModalOpen = true;
+        state.isMobileMenuOpen = false;
+        render();
+      } else if (action === "switch-auth-tab") {
+        state.authTab = btn.dataset.tab;
+        state.authError = "";
+        state.registrationNotice = null;
+        render();
+      } else if (action === "close-auth") {
+        state.isAuthModalOpen = false;
+        state.registrationNotice = null;
+        render();
+      } else if (action === "logout") {
+        if (sb) await sb.auth.signOut().catch(() => {});
+        state.authUser = null;
+        state.currentUser = null;
+        state.submissions = [];
+        state.isSubmitModalOpen = false;
+        state.isReviewModalOpen = false;
+        state.isMobileMenuOpen = false;
+        showToast("Anda telah keluar dari akun.");
+      } else if (action === "open-pub") {
+        const pubId = btn.dataset.id;
+        state.publications = state.publications.map((p) => (p.id === pubId ? { ...p, views: (p.views || 0) + 1 } : p));
+        state.readingItemId = pubId;
+        saveBackups();
+        render();
+        cloudIncrementViews(pubId);
+      } else if (action === "inc-download-view") {
+        const pubId = btn.dataset.id;
+        state.publications = state.publications.map((p) => (p.id === pubId ? { ...p, views: (p.views || 0) + 1 } : p));
+        saveBackups();
+        render();
+        cloudIncrementViews(pubId);
+      } else if (action === "close-reader") {
+        state.readingItemId = null;
+        render();
+      } else if (action === "force-sync") {
+        await forceSyncAllToCloud();
+      } else if (action === "toggle-customizer") {
+        state.isCustomizerOpen = !state.isCustomizerOpen;
+        render();
+      } else if (action === "set-accent") {
+        state.siteConfig.accentKey = btn.dataset.key;
+        render();
+        await persistSiteConfig();
+      } else if (action === "set-layout") {
+        state.siteConfig.layoutMode = btn.dataset.val;
+        render();
+        await persistSiteConfig();
+      } else if (action === "set-fontsize") {
+        state.siteConfig.fontSize = btn.dataset.val;
+        render();
+        await persistSiteConfig();
+      } else if (action === "reset-config") {
+        state.siteConfig = { ...DEFAULT_SITE_CONFIG };
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Tampilan dikembalikan ke pengaturan awal.");
+      } else if (action === "open-logo-editor") {
+        state.logoUploadError = "";
+        state.logoDraft = {
+          orgName: state.siteConfig.orgName,
+          orgSubtitle: state.siteConfig.orgSubtitle ?? "Diskusi & Advokasi",
+          logoType: state.siteConfig.logoType || "icon",
+          logoIconId: state.siteConfig.logoIconId || "initials",
+          logoIconBg: state.siteConfig.logoIconBg || "",
+          logoImageData: state.siteConfig.logoImageData || "",
+          logoImageUrl: state.siteConfig.logoImageUrl || "",
+          logoShape: state.siteConfig.logoShape || "rounded",
+          showLogoText: state.siteConfig.showLogoText !== false
+        };
+        state.isLogoEditorOpen = true;
+        state.isCustomizerOpen = false;
+        render();
+      } else if (action === "close-logo-editor") {
+        state.isLogoEditorOpen = false;
+        render();
+      } else if (action === "set-logo-type") {
+        state.logoDraft.logoType = btn.dataset.val;
+        render();
+      } else if (action === "set-logo-icon") {
+        state.logoDraft.logoIconId = btn.dataset.val;
+        render();
+      } else if (action === "open-submit") {
+        if (!state.authUser) {
+          state.authTab = "login";
+          state.authError = "";
+          state.registrationNotice = null;
+          state.isAuthModalOpen = true;
+          showToast("Masuk atau daftar akun dulu untuk mengajukan tulisan.");
+        } else {
+          if (btn.dataset.defaultCat) state.uploadForm.category = btn.dataset.defaultCat;
+          state.isSubmitModalOpen = true;
+          render();
+          loadSubmissions().catch(() => {});
+        }
+      } else if (action === "close-submit") {
+        state.isSubmitModalOpen = false;
+        render();
+      } else if (action === "open-review") {
+        if (!isAdmin()) return;
+        state.isReviewModalOpen = true;
+        render();
+        loadSubmissions().catch(() => {});
+      } else if (action === "close-review") {
+        state.isReviewModalOpen = false;
+        state.editingSubmissionId = null;
+        state.reviewDraft = {};
+        render();
+      } else if (action === "approve-submission") {
+        await publishSubmission(state.submissions.find((x) => x.id === btn.dataset.id));
+      } else if (action === "edit-submission") {
+        if (!isAdmin()) return;
+        const sub = state.submissions.find((x) => x.id === btn.dataset.id);
+        if (!sub) return;
+        state.editingSubmissionId = sub.id;
+        state.reviewDraft = { title: sub.title, excerpt: sub.excerpt || "", content: sub.content };
+        render();
+      } else if (action === "cancel-edit-submission") {
+        state.editingSubmissionId = null;
+        state.reviewDraft = {};
+        render();
+      } else if (action === "save-publish-submission") {
+        if (!isAdmin()) return;
+        const id = state.editingSubmissionId;
+        const d = state.reviewDraft || {};
+        if (await saveSubmissionEdits(id, d)) {
+          await publishSubmission(state.submissions.find((x) => x.id === id));
+        }
+      } else if (action === "reject-submission") {
+        if (!isAdmin()) return;
+        const { error } = await sb.from(T.submissions).update({ status: "rejected" }).eq("id", btn.dataset.id);
+        if (error) {
+          softToast("Gagal menolak: " + error.message);
+        } else {
+          await loadSubmissions();
+          showToast("Tulisan ditolak.");
+        }
+      } else if (action === "delete-submission") {
+        const { error } = await sb.from(T.submissions).delete().eq("id", btn.dataset.id);
+        if (error) {
+          softToast("Gagal menghapus: " + error.message);
+        } else {
+          await loadSubmissions();
+          showToast("Pengajuan dihapus.");
+        }
+      } else if (action === "open-upload") {
+        if (btn.dataset.defaultCat) state.uploadForm.category = btn.dataset.defaultCat;
+        state.isUploadModalOpen = true;
+        render();
+      } else if (action === "close-upload") {
+        state.isUploadModalOpen = false;
+        render();
+      } else if (action === "edit-pub") {
+        const target = state.publications.find((p) => p.id === btn.dataset.id);
+        if (target) {
+          state.editingPubItem = { ...target };
+          render();
+        }
+      } else if (action === "close-edit-pub") {
+        state.editingPubItem = null;
+        render();
+      } else if (action === "delete-pub") {
+        const id = btn.dataset.id;
+        state.publications = state.publications.filter((p) => p.id !== id);
+        saveBackups();
+        render();
+        await cloudDelete(T.publications, id).catch(() => {});
+        showToast("Publikasi berhasil dihapus.");
+      } else if (action === "delete-event") {
+        const id = btn.dataset.id;
+        state.events = state.events.filter((ev) => ev.id !== id);
+        saveBackups();
+        render();
+        await cloudDelete(T.events, id).catch(() => {});
+      } else if (action === "delete-board") {
+        const id = btn.dataset.id;
+        state.boardMembers = state.boardMembers.filter((m) => m.id !== id);
+        saveBackups();
+        render();
+        await syncSettingsToCloud({ boardMembers: state.boardMembers }).catch(() => {});
+      } else if (action === "delete-advocacy") {
+        const id = btn.dataset.id;
+        state.advocacyCases = state.advocacyCases.filter((c) => c.id !== id);
+        saveBackups();
+        render();
+        await cloudDelete(T.advocacy, id).catch(() => {});
+      } else if (action === "open-mega-manager") {
+        state.isMegaManagerOpen = true;
+        render();
+      } else if (action === "close-mega-manager") {
+        state.isMegaManagerOpen = false;
+        render();
+      } else if (action === "download-mega-package") {
+        const manifest = {
+          nama_folder_utama: "Arsip_Mega_Socialist_Table",
+          dibuat_pada: new Date().toLocaleString("id-ID"),
+          struktur_folder: {
+            "01_Bidang_Sosial": state.publications.filter((p) => p.category === "sosial"),
+            "02_Bidang_Politik": state.publications.filter((p) => p.category === "politik"),
+            "03_Bidang_Hukum": state.publications.filter((p) => p.category === "hukum"),
+            "04_Bidang_Lingkungan": state.publications.filter((p) => p.category === "lingkungan")
+          }
+        };
+        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Arsip_Mega_Socialist_Table_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Paket folder "Arsip_Mega_Socialist_Table" berhasil diunduh!');
+      } else if (action === "open-backup") {
+        state.exportedCodeText = JSON.stringify(
+          {
+            siteConfig: state.siteConfig,
+            publications: state.publications,
+            events: state.events,
+            boardMembers: state.boardMembers,
+            advocacyCases: state.advocacyCases,
+            categoryMeta: state.categoryMeta
+          },
+          null,
+          2
+        );
+        state.isExportModalOpen = true;
+        render();
+      } else if (action === "close-backup") {
+        state.isExportModalOpen = false;
+        render();
+      } else if (action === "copy-backup") {
+        const txt = document.getElementById("backup-json-textarea")?.value || state.exportedCodeText;
+        navigator.clipboard?.writeText(txt);
+        showToast("Data cadangan disalin ke clipboard!");
+      } else if (action === "import-backup") {
+        try {
+          const parsed = JSON.parse(document.getElementById("backup-json-textarea").value);
+          if (parsed.siteConfig) state.siteConfig = { ...DEFAULT_SITE_CONFIG, ...parsed.siteConfig };
+          if (parsed.publications) state.publications = parsed.publications;
+          if (parsed.events) state.events = parsed.events;
+          if (parsed.boardMembers) state.boardMembers = parsed.boardMembers;
+          if (parsed.advocacyCases) state.advocacyCases = parsed.advocacyCases;
+          if (parsed.categoryMeta) state.categoryMeta = { ...DEFAULT_CATEGORY_META, ...parsed.categoryMeta };
+          state.isExportModalOpen = false;
+          await forceSyncAllToCloud();
+        } catch {
+          showToast("Format JSON cadangan tidak valid.");
+        }
+      } else if (action === "reset-contact-form") {
+        state.contactSubmitted = false;
+        render();
+      }
+    });
+
+    // --- HANDLER UNGGAH FILE LOGO ---
+    document.addEventListener("change", async (e) => {
+      if (e.target.id === "logo-file-input") {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const dataUrl = await compressImageFile(file, 360, 0.82);
+          state.logoDraft.logoType = "upload";
+          state.logoDraft.logoImageData = dataUrl;
+          render();
+        } catch {
+          state.logoUploadError = "Gagal memproses file gambar logo.";
+          render();
+        }
+      }
+    });
+
+    // --- HANDLER SUBMIT SEMUA FORM ---
+    document.addEventListener("input", (ev) => {
+      const t = ev.target;
+      if (t && t.name && t.closest && t.closest("#submit-article-form")) {
+        state.submitDraft[t.name] = t.value;
+      }
+      if (t && t.name && t.closest && t.closest("#edit-submission-form")) {
+        state.reviewDraft[t.name] = t.value;
+      }
+    });
+
+    document.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+
+      if (form.id === "auth-form") {
+        const authErr = (err) => {
+          const m = String(err?.message || "").toLowerCase();
+          const c = String(err?.code || "").toLowerCase();
+          if (m.includes("already registered") || m.includes("already been registered") || c.includes("user_already_exists")) return "Email sudah terdaftar.";
+          if (m.includes("password should be at least") || c.includes("weak_password")) return "Kata sandi terlalu lemah (minimal 6 karakter).";
+          if (m.includes("invalid email") || m.includes("unable to validate email") || c.includes("email_address_invalid")) return "Format email tidak valid.";
+          if (m.includes("rate limit") || c.includes("over_request_rate_limit") || c.includes("over_email_send_rate_limit")) return "Terlalu banyak percobaan. Coba lagi beberapa menit lagi.";
+          if (m.includes("email not confirmed") || c.includes("email_not_confirmed")) return "Email belum diverifikasi. Cek kotak masuk email Anda.";
+          if (m.includes("signups not allowed") || c.includes("signup_disabled") || c.includes("provider_disabled")) return "Aktifkan Email provider / Sign-ups di Supabase Authentication.";
+          if (m.includes("error sending") || m.includes("sending confirmation") || c.includes("unexpected_failure") && m.includes("email")) return "Email konfirmasi gagal dikirim. Periksa pengaturan SMTP / batas email di Supabase, atau matikan 'Confirm email'.";
+          if (m.includes("database error saving new user")) return "Database error saat menyimpan user baru. Jalankan ulang supabase-setup.sql (bagian trigger handle_new_user).";
+          if (m.includes("failed to fetch") || m.includes("networkerror")) return "Tidak dapat terhubung ke Supabase. Periksa koneksi internet dan SUPABASE_URL.";
+          if (state.authTab === "register") return "Pendaftaran gagal: " + (err?.message || "kesalahan tidak diketahui");
+          return "Email atau kata sandi tidak sesuai.";
+        };
+        if (!sb) {
+          state.authError = "Supabase belum dikonfigurasi. Isi SUPABASE_URL & SUPABASE_ANON_KEY di index.html.";
+          render();
+          return;
+        }
+        if (state.authTab === "login") {
+          const email = String(fd.get("identifier") || "").trim();
+          const passInput = String(fd.get("password") || "");
+          try {
+            const { data, error } = await sb.auth.signInWithPassword({ email, password: passInput });
+            if (error) throw error;
+            const u = data.user;
+            state.isAuthModalOpen = false;
+            state.authError = "";
+            showToast(`Selamat datang kembali, ${u.user_metadata?.name || u.email}!`);
+            render();
+          } catch (err) {
+            state.authError = authErr(err);
+            render();
+            return;
+          }
+        } else {
+          const name = String(fd.get("name") || "").trim();
+          const email = String(fd.get("email") || "").trim().toLowerCase();
+          const password = String(fd.get("password") || "");
+          if (!name || !email || password.length < 6) {
+            state.authError = "Isi nama, email valid, dan sandi minimal 6 karakter.";
+            render();
+            return;
+          }
+          try {
+            const { data, error } = await sb.auth.signUp({
+              email,
+              password,
+              options: { data: { name } }
+            });
+            if (error) throw error;
+            // Jika "Confirm email" aktif, email yang sudah terdaftar dikembalikan tanpa error tetapi identities kosong
+            if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+              throw { message: "User already registered" };
+            }
+            // Profil member disimpan otomatis oleh trigger di database (lihat supabase-setup.sql).
+            // Jika "Confirm email" aktif di Supabase, session kosong sampai email diverifikasi.
+            if (data.session && data.user) {
+              state.authUser = data.user;
+              state.currentUser = { id: data.user.id, name, email, role: "member" };
+            }
+            state.authError = "";
+            state.registrationNotice = { name, email, needsConfirm: !data.session };
+          } catch (err) {
+            console.error("Supabase signUp error:", err);
+            state.authError = authErr(err);
+          }
+          render();
+        }
+      } else if (form.id === "hero-editor-form") {
+        state.siteConfig.heroTagline = String(fd.get("heroTagline") || "");
+        state.siteConfig.heroDescription = String(fd.get("heroDescription") || "");
+        state.activeSectionEditor = null;
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Bagian Hero berhasil disimpan ke Cloud!");
+      } else if (form.id === "add-event-form") {
+        const newEv = {
+          id: `ev-${Date.now()}`,
+          date: String(fd.get("date") || ""),
+          title: String(fd.get("title") || ""),
+          location: String(fd.get("location") || ""),
+          createdAt: Date.now()
+        };
+        state.events.unshift(newEv);
+        saveBackups();
+        render();
+        await cloudUpsert(T.events, newEv.id, newEv).catch(() => {});
+        showToast("Agenda diskusi baru tersimpan ke Cloud!");
+      } else if (form.id === "about-intro-form") {
+        state.siteConfig.aboutIntro = String(fd.get("aboutIntro") || "");
+        state.siteConfig.aboutHistory = String(fd.get("aboutHistory") || "");
+        state.siteConfig.aboutVision = String(fd.get("aboutVision") || "");
+        state.siteConfig.aboutMission = String(fd.get("aboutMission") || "");
+        state.activeSectionEditor = null;
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Profil & Visi Misi tersimpan ke Cloud!");
+      } else if (form.id === "add-board-form") {
+        state.boardMembers.push({
+          id: `bm-${Date.now()}`,
+          name: String(fd.get("name") || ""),
+          role: String(fd.get("role") || ""),
+          focus: String(fd.get("focus") || "")
+        });
+        saveBackups();
+        render();
+        await syncSettingsToCloud({ boardMembers: state.boardMembers }).catch(() => {});
+        showToast("Pengurus baru ditambahkan ke Cloud!");
+      } else if (form.id === "category-desc-form") {
+        state.categoryMeta[state.selectedCategory].desc = String(fd.get("desc") || "");
+        state.activeSectionEditor = null;
+        saveBackups();
+        await syncSettingsToCloud({ categoryMeta: state.categoryMeta }).catch(() => {});
+        showToast("Deskripsi bidang diperbarui!");
+      } else if (form.id === "advocacy-highlight-form") {
+        state.siteConfig.advocacyHighlightTitle = String(fd.get("advocacyHighlightTitle") || "");
+        state.siteConfig.advocacyHighlightDesc = String(fd.get("advocacyHighlightDesc") || "");
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Sorotan advokasi tersimpan ke Cloud!");
+      } else if (form.id === "add-advocacy-form") {
+        const newCase = {
+          id: `adv-${Date.now()}`,
+          title: String(fd.get("title") || ""),
+          status: String(fd.get("status") || "Berjalan"),
+          field: String(fd.get("field") || "Hukum & Sosial"),
+          progress: Number(fd.get("progress") || 50),
+          summary: String(fd.get("summary") || ""),
+          createdAt: Date.now()
+        };
+        state.advocacyCases.unshift(newCase);
+        saveBackups();
+        render();
+        await cloudUpsert(T.advocacy, newCase.id, newCase).catch(() => {});
+        showToast("Kasus advokasi baru tersimpan ke Cloud!");
+      } else if (form.id === "contact-info-form") {
+        state.siteConfig.contactEmail = String(fd.get("contactEmail") || "");
+        state.siteConfig.contactAddress = String(fd.get("contactAddress") || "");
+        state.siteConfig.contactInstagram = String(fd.get("contactInstagram") || "");
+        state.siteConfig.contactTwitter = String(fd.get("contactTwitter") || "");
+        state.siteConfig.contactWhatsappChannel = String(fd.get("contactWhatsappChannel") || "");
+        state.activeSectionEditor = null;
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Info kontak & saluran WA tersimpan ke Cloud!");
+      } else if (form.id === "public-contact-form") {
+        state.contactSubmitted = true;
+        render();
+      } else if (form.id === "customizer-form") {
+        state.siteConfig.orgName = String(fd.get("orgName") || "Socialist Table");
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Pengaturan tampilan tersimpan ke Cloud!");
+      } else if (form.id === "logo-editor-form") {
+        if (state.logoDraft.logoType === "url") {
+          state.logoDraft.logoImageUrl = String(fd.get("logoImageUrl") || "");
+        }
+        state.logoDraft.logoShape = String(fd.get("logoShape") || "rounded");
+        state.logoDraft.orgSubtitle = String(fd.get("orgSubtitle") || "");
+        state.siteConfig = { ...state.siteConfig, ...state.logoDraft };
+        state.isLogoEditorOpen = false;
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Logo Socialist Table berhasil disimpan ke Cloud!");
+      } else if (form.id === "edit-submission-form") {
+        const d = state.reviewDraft || {};
+        const ok = await saveSubmissionEdits(state.editingSubmissionId, {
+          title: fd.get("title") ?? d.title,
+          excerpt: fd.get("excerpt") ?? d.excerpt,
+          content: fd.get("content") ?? d.content
+        });
+        if (ok) showToast("Perubahan tulisan tersimpan. Anda masih bisa menyetujui atau menolaknya.");
+      } else if (form.id === "submit-article-form") {
+        if (!sb || !state.authUser) {
+          softToast("Silakan masuk terlebih dahulu.");
+          return;
+        }
+        const type = fd.get("type") === "report" ? "report" : "opinion";
+        const catRaw = String(fd.get("category") || "sosial");
+        const category = state.categoryMeta[catRaw] ? catRaw : "sosial";
+        const title = String(fd.get("title") || "").trim();
+        const author = String(fd.get("author") || "").trim();
+        const excerpt = String(fd.get("excerpt") || "").trim();
+        const content = String(fd.get("content") || "").trim();
+        const docRaw = String(fd.get("docUrl") || "").trim();
+        const docUrl = safeHttpUrl(docRaw);
+        if (!title || !author || content.length < 50) {
+          softToast("Judul, penulis, dan isi tulisan (minimal 50 karakter) wajib diisi.");
+          return;
+        }
+        if (docRaw && !docUrl) {
+          softToast("Tautan lampiran harus diawali http:// atau https://");
+          return;
+        }
+        const pendingMine = state.submissions.filter((x) => x.userId === state.authUser.id && x.status === "pending").length;
+        if (pendingMine >= MAX_PENDING_PER_USER) {
+          softToast(`Anda masih punya ${MAX_PENDING_PER_USER} pengajuan yang menunggu. Tunggu hasil tinjauan admin dulu.`);
+          return;
+        }
+        const payload = {
+          type,
+          category,
+          title,
+          author,
+          excerpt,
+          content,
+          docUrl,
+          date: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
+          submitterName: state.currentUser?.name || "",
+          submitterEmail: state.authUser.email || ""
+        };
+        const { error } = await sb.from(T.submissions).insert({
+          id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          data: payload,
+          status: "pending",
+          user_id: state.authUser.id,
+          created_at: Date.now()
+        });
+        if (error) {
+          console.error("Kirim pengajuan gagal:", error);
+          softToast("Gagal mengirim: " + (error.message || "lihat console (F12)"));
+          return;
+        }
+        state.submitDraft = {};
+        state.isSubmitModalOpen = false;
+        await loadSubmissions();
+        showToast("Tulisan terkirim! Admin akan meninjaunya sebelum tayang.");
+      } else if (form.id === "upload-pub-form") {
+        const category = String(fd.get("category") || "sosial");
+        const content = String(fd.get("content") || "");
+        const excerpt = String(fd.get("excerpt") || "").trim() || content.slice(0, 150) + "...";
+        const newPub = {
+          id: `pub-${Date.now()}`,
+          type: String(fd.get("type") || "opinion"),
+          category,
+          title: String(fd.get("title") || ""),
+          author: String(fd.get("author") || ""),
+          date: String(fd.get("date") || ""),
+          excerpt,
+          content,
+          docUrl: String(fd.get("docUrl") || ""),
+          docName: String(fd.get("docUrl") || "").includes("mega.nz") ? "Dokumen_MEGA.pdf" : "Dokumen_Lampiran.pdf",
+          coverGradient: (COVER_PRESETS.find((c) => c.id === category) || COVER_PRESETS[0]).gradient,
+          customCover: "",
+          views: 0,
+          createdAt: Date.now()
+        };
+        state.publications.unshift(newPub);
+        state.isUploadModalOpen = false;
+        state.selectedCategory = category;
+        state.activePage = "fokus";
+        saveBackups();
+        render();
+        await cloudUpsert(T.publications, newPub.id, newPub).catch(() => {});
+        showToast("Tulisan/kajian berhasil dipublikasikan ke Cloud!");
+      } else if (form.id === "edit-pub-form") {
+        const updated = {
+          ...state.editingPubItem,
+          type: String(fd.get("type") || "opinion"),
+          category: String(fd.get("category") || "sosial"),
+          title: String(fd.get("title") || ""),
+          author: String(fd.get("author") || ""),
+          date: String(fd.get("date") || ""),
+          excerpt: String(fd.get("excerpt") || ""),
+          content: String(fd.get("content") || ""),
+          docUrl: String(fd.get("docUrl") || "")
+        };
+        state.publications = state.publications.map((p) => (p.id === updated.id ? updated : p));
+        state.editingPubItem = null;
+        saveBackups();
+        render();
+        await cloudUpsert(T.publications, updated.id, updated).catch(() => {});
+        showToast("Perubahan tulisan/kajian tersimpan ke Cloud!");
+      } else if (form.id === "mega-links-form") {
+        state.siteConfig.megaRootFolderUrl = String(fd.get("megaRootFolderUrl") || "");
+        state.siteConfig.megaFolderSosialUrl = String(fd.get("megaFolderSosialUrl") || "");
+        state.siteConfig.megaFolderPolitikUrl = String(fd.get("megaFolderPolitikUrl") || "");
+        state.siteConfig.megaFolderHukumUrl = String(fd.get("megaFolderHukumUrl") || "");
+        state.siteConfig.megaFolderLingkunganUrl = String(fd.get("megaFolderLingkunganUrl") || "");
+        state.isMegaManagerOpen = false;
+        saveBackups();
+        await syncSettingsToCloud({ siteConfig: state.siteConfig }).catch(() => {});
+        showToast("Tautan folder MEGA tersimpan ke Cloud!");
+      }
+    });
+
+    // Render awal saat halaman dibuka
+    render();
+  </script>
+</body>
+</html>
