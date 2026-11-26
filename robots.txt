@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mdevan-star.github.io/socialist-table/sitemap.xml
